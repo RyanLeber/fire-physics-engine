@@ -9,13 +9,13 @@ from .joint import Joint
 
 @value
 struct World:
-    var bodies: List[UnsafePointer[Body]]
-    var joints: List[UnsafePointer[Joint]]
+    var gravity: Vec2
+    var iterations: Int
     var accumulate_impulses: Bool
     var warm_starting: Bool
     var position_correction: Bool
-    var gravity: Vec2
-    var iterations: Int
+    var bodies: List[UnsafePointer[Body]]
+    var joints: List[UnsafePointer[Joint]]
     var arbiters: Dict[ArbiterKey, Arbiter]
 
     fn __init__(inout self, gravity: Vec2, iterations: Int):
@@ -64,6 +64,7 @@ struct World:
                     self.arbiters[key] = new_arb
                         
                 elif key in self.arbiters:
+                    print("popping")
                     _ = self.arbiters.pop(key)
 
 
@@ -73,7 +74,8 @@ struct World:
         # Determine overlapping bodies and update contact points.
         self.broad_phase()
 
-        if len(self.arbiters) > 1:
+        if len(self.arbiters) > 2:
+            # breakpoint()
             print("len arbiters:", len(self.arbiters))
 
         # Integrate forces.

@@ -77,6 +77,9 @@ fn clip_segment_to_line(
         v_out[num_out] = v_in[1]
         num_out += 1
 
+    if num_out > 2:
+        print("WARNING! num_out > 2:", num_out)
+
     if distance_0 * distance_1 < 0.0:
         var interp: Float32 = distance_0 / (distance_0 - distance_1)
 
