@@ -62,10 +62,10 @@ struct Contact(CollectionElement):
     var feature: FeaturePair
 
     fn __init__(inout self):
-        self.position = Vec2.zero()
-        self.normal = Vec2.zero()
-        self.r1 = Vec2.zero()
-        self.r2 = Vec2.zero()
+        self.position = Vec2(0, 0)
+        self.normal = Vec2(0, 0)
+        self.r1 = Vec2(0, 0)
+        self.r2 = Vec2(0, 0)
         self.separation = 0.0
         self.Pn = 0.0
         self.Pt = 0.0
@@ -94,18 +94,10 @@ struct ArbiterKey(KeyElement):
         return hash(int(self.b1) + int(self.b2))
 
     fn __eq__(self, other: ArbiterKey) -> Bool:
-        # if self.b1 == other.b1:
-        #     return True
-        if self.b1 == other.b1 and self.b2 == other.b2:
-            return True
-        # else:
-        #     print("arb keys not equal")
-        #     print("self", self.b1, other.b1)
-        #     print("other", self.b2, other.b2)
-        return False
+        return self.b1 == other.b1 and self.b2 == other.b2
 
     fn __ne__(self, other: ArbiterKey) -> Bool:
-        return not self == other
+        return not self.b1 == other.b1 and not self.b2 == other.b2
 
 
 @value
@@ -174,7 +166,7 @@ struct Arbiter(CollectionElement):
         self.num_contacts = num_new_contacts
 
 
-    fn pre_step(inout self, inv_dt: Float32, world_pos_cor: Bool, world_accumulate_impulses: Bool):
+    fn pre_step(inout self, inv_dt: Float32, world_pos_cor: Bool, accumulate_impulses: Bool):
         var k_allowedPenetration: Float32 = 0.01
         var k_biasFactor: Float32 = 0.2 if world_pos_cor else 0.0
 
@@ -202,7 +194,7 @@ struct Arbiter(CollectionElement):
 
             c[].bias = -k_biasFactor * inv_dt * min[DType.float32](0.0, c[].separation + k_allowedPenetration)
 
-            if world_accumulate_impulses:
+            if accumulate_impulses:
                 # Apply normal + friction impulse
                 var P: Vec2 = (c[].normal * c[].Pn) + (tangent * c[].Pt)
 
@@ -212,7 +204,8 @@ struct Arbiter(CollectionElement):
                 self.b2[].velocity += P * self.b2[].invMass
                 self.b2[].angularVelocity += self.b2[].invI * cross(r2, P)
 
-    fn apply_impulse(inout self, world_accumulate_impulses: Bool):
+
+    fn apply_impulse(inout self, accumulate_impulses: Bool):
         for i in range(self.num_contacts):
             var c = Reference(self.contacts[i])
             c[].r1 = c[].position - self.b1[].position
@@ -226,11 +219,11 @@ struct Arbiter(CollectionElement):
             var vn: Float32 = dot(dv, c[].normal)
             var dPn: Float32 = c[].massNormal * (-vn + c[].bias)
 
-            if world_accumulate_impulses:
+            if accumulate_impulses:
                 # Clamp the accumulated impulse
                 var Pn0: Float32 = c[].Pn
                 c[].Pn = max(Pn0 + dPn, 0.0)
-                var dPn: Float32 = c[].Pn - Pn0
+                dPn = c[].Pn - Pn0
             else:
                 dPn = max(dPn, 0.0)
 
@@ -251,7 +244,7 @@ struct Arbiter(CollectionElement):
             var vt: Float32 = dot(dv, tangent)
             var dPt = c[].massTangent * (-vt)
 
-            if world_accumulate_impulses:
+            if accumulate_impulses:
                 # Compute friction impulse
                 var maxPt: Float32 = self.friction * c[].Pn
 

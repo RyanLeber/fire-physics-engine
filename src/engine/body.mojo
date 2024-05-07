@@ -41,12 +41,12 @@ struct Body(CollectionElement):
 
     fn __init__(inout self):
         self.rotation = 0.0
-        self.velocity = Vec2.zero()
+        self.velocity = Vec2(0, 0)
         self.angularVelocity = 0.0
-        self.force = Vec2.zero()
+        self.force = Vec2(0, 0)
         self.torque = 0.0
         self.friction = 0.2
-        self.position = Vec2.zero()
+        self.position = Vec2(0, 0)
         self.width = Vec2(1.0, 1.0)
         self.mass = inf[DType.float32]()
         self.invMass = 0.0

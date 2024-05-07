@@ -62,14 +62,7 @@ struct World:
                 
                 if new_arb.num_contacts > 0:
                     self.arbiters[key] = new_arb
-                    # if key in self.arbiters:
-                    #     print("new artiber updated")
-                    #     self.arbiters[key] = new_arb
-                    # else:
-                    #     print("new artiber updated")
-                    #     self.arbiters[key] = new_arb
                         
-
                 elif key in self.arbiters:
                     _ = self.arbiters.pop(key)
 
@@ -114,7 +107,7 @@ struct World:
             b[][].position += b[][].velocity * dt
             b[][].rotation += dt * b[][].angularVelocity
 
-            b[][].force = Vec2.zero()
+            b[][].force = Vec2(0,0)
             b[][].torque = 0.0
 
         # Integrate Velocities
@@ -122,5 +115,5 @@ struct World:
             self.bodies[i][].position += self.bodies[i][].velocity * dt
             self.bodies[i][].rotation += dt * self.bodies[i][].angularVelocity
 
-            self.bodies[i][].force = Vec2.zero()
+            self.bodies[i][].force = Vec2(0,0)
             self.bodies[i][].torque = 0.0
