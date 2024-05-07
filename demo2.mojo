@@ -1,18 +1,10 @@
 
 from random import random_float64
-import sys
 from math.limit import inf
 from utils import InlineArray
-from collections import Optional, Set
+from collections import Optional, Set, Dict
 
 from src.engine import Body, Joint, World
-from src.engine_utils import (
-        i1_1,
-        i1_0,
-        Mat22,
-        Vec2,
-    )
-
 from src.engine_utils import (
         RayLib,
         Vector2,
@@ -25,12 +17,19 @@ from src.engine_utils import (
         CameraMode,
         CameraProjection,
         Keyboard,
-        DrawModes
+        DrawModes,
+        i1_1,
+        i1_0,
+        Mat22,
+        Vec2
     )
 
 alias SCREENWIDTH: Int = 1280
 alias SCREENHEIGHT: Int = 720
 alias FPS = 60
+
+alias iterations: Int = 10
+alias gravity: Vec2 = Vec2(0.0, -10.0)
 
 alias demo_strings = Tuple(
 	"Demo 1: A Single Box",
@@ -49,26 +48,18 @@ fn main() raises:
     alias width: Int = SCREENWIDTH
     alias height: Int = SCREENHEIGHT
 
-    alias origin = Vec2( SCREENWIDTH * 0.5, SCREENHEIGHT * 0.5)
-
     var red = BuiltinColors.RED
     var black = BuiltinColors.BLACK
-    # var white = BuiltinColors.WHITE
-    # var dark_gray = BuiltinColors.DARKGRAY
 
     var raylib = RayLib()
 
     var bodies = InlineArray[Body, 200](Body())
     var joints = InlineArray[Joint, 100](Joint())
-
     var bomb: Optional[UnsafePointer[Body]] = None
 
-    var iterations: Int = 10
-    var gravity: Vec2 = Vec2(0.0, -10.0)
-
-    var numBodies: Int = 0
-    var numJoints: Int = 0
-    # var demoIndex: Int = 0
+    var num_bodies: Int = 0
+    var num_joints: Int = 0
+    var demo_index: Int = 0
 
     var world = World(gravity, iterations)
 
@@ -78,13 +69,13 @@ fn main() raises:
         bodies[0].set(Vec2(100.0, 20.0), inf[DType.float32]())
         bodies[0].position = Vec2(0.0, -0.5 * bodies[0].width.y)
         world.add(Reference(bodies[0]))
-        numBodies += 1
+        num_bodies += 1
 
         # Set the second box
         bodies[1].set(Vec2(1.0, 1.0), 200.0)
         bodies[1].position = Vec2(0.0, 4.0)
         world.add(Reference(bodies[1]))
-        numBodies += 1
+        num_bodies += 1
 
 
     @parameter
@@ -103,13 +94,11 @@ fn main() raises:
         bodies[1].rotation = 0.0
         world.add(Reference(bodies[1]))
 
-        numBodies += 2
+        num_bodies += 2
 
         joints[0].set(bodies[0], bodies[1], Vec2(0.0, 11.0))
         world.add(Reference(joints[0]))
-        numJoints += 1
-
-    var demos = List[fn() capturing -> None](Demo1, Demo2)
+        num_joints += 1
 
 
     # A vertical stack
@@ -121,7 +110,7 @@ fn main() raises:
         bodies[0].position = Vec2(0.0, -0.5 * bodies[0].width.y)
         bodies[0].rotation = 0.0
         world.add(Reference(bodies[0]))
-        numBodies += 1
+        num_bodies += 1
 
         for i in range(1, 10):
             bodies[i].set(Vec2(1.0, 1.0), 1.0)
@@ -129,29 +118,32 @@ fn main() raises:
             var x = random_float64(-0.1, 0.1)
             bodies[i].position = Vec2(x, 0.51 + 1.05 * i)
             world.add(Reference(bodies[i]))
-            numBodies += 1
+            num_bodies += 1
 
 
     @parameter
-    fn init_demo(index: Int):
+    fn init_demo(i: Int) raises:
         print("trigger init demo")
         world.clear()
-        numBodies = 0
-        numJoints = 0
+        num_bodies = 0
+        num_joints = 0
         bomb = None
+        
+        demo_index = i
 
-        Demo2()
-        # demos[index]()
+        if i == 0: Demo1()
+        if i == 1: Demo2()
+        if i == 2: Demo4()
 
 
     @parameter
     fn launch_bomb():
         if bomb is None:
-            bomb = UnsafePointer.address_of(bodies[numBodies])
+            bomb = UnsafePointer.address_of(bodies[num_bodies])
             bomb.value()[][].set(Vec2(1.0, 1.0), 50.0)
             bomb.value()[][].friction = 0.2
             world.add(bomb.value()[])
-            numBodies += 1
+            num_bodies += 1
 
         bomb.value()[][].position = Vec2(random_float64(-15.0, 15.0), 15.0)
         bomb.value()[][].rotation = random_float64(-1.5, 1.5)
@@ -178,8 +170,8 @@ fn main() raises:
         else:
             raylib.rl_color_4ub(204, 204, 229, 255)
 
-        raylib.rl_vertex_2f(v1.x, v1.y)
         raylib.rl_vertex_2f(v2.x, v2.y)
+        raylib.rl_vertex_2f(v1.x, v1.y)
 
         raylib.rl_vertex_2f(v1.x, v1.y)
         raylib.rl_vertex_2f(v4.x, v4.y)
@@ -221,7 +213,7 @@ fn main() raises:
         raylib.rl_end()
 
     @parameter
-    fn handle_keyboard_events() -> None:
+    fn handle_keyboard_events() raises -> None:
         var num_keys = Set[Int](
             Keyboard.KEY_ONE,
             Keyboard.KEY_TWO,
@@ -264,14 +256,15 @@ fn main() raises:
         var time_step: Float32 = 1.0 / 60.0
 
         var camera: Camera2D = Camera2D()
-        camera.offset = Vec2( width / 2, height / 2 )
+        camera.offset = Vec2( width * 0.5, height * .9 )
         camera.target = Vec2( 0, 0 )
         camera.rotation = 180.0
         # camera.zoom = 50.0
-        camera.zoom = 20.0
+        camera.zoom = 35.0
 
         # Initialize the demo
-        init_demo(0)
+        var i = 0
+        init_demo(i)
 
         while not raylib.window_should_close():
             handle_keyboard_events()
@@ -281,13 +274,13 @@ fn main() raises:
             raylib.begin_mode_2d(Reference(camera))
             
             # Update the world
-            world.step(time_step)
+            world.step (time_step)
 
             # Draw bodies and joints
-            for i in range(numBodies):  
+            for i in range(num_bodies):  
                 draw_body(Reference(bodies[i]), i)
 
-            for j in range(numJoints): 
+            for j in range(num_joints): 
                 draw_joint(Reference(joints[j]))
 
             for item in world.arbiters.items():
@@ -308,7 +301,7 @@ fn main() raises:
     main_loop()
 
     # _ = raylib
-    _ = bodies
-    _ = joints
+    # _ = bodies
+    # _ = joints
     _ = world
-    _ = demos
+    # _ = demos
