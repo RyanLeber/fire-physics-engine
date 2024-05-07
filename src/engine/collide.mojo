@@ -13,6 +13,19 @@ from src.engine_utils import (
     sign
     )
 
+
+# Box vertex and edge numbering:
+#        ^ y
+#        |
+#        e1
+#   v2 ------ v1
+#    |        |
+# e2 |        | e4  --> x
+#    |        |
+#   v3 ------ v4
+#        e3
+
+
 # Enum
 struct Axis:
     alias FACE_A_X: UInt8 = 0
@@ -29,30 +42,15 @@ struct EdgeNumbers:
     alias EDGE4: UInt8 = 4
 
 
-# @value
-# struct ClipPair(CollectionElement):
-#     var vertex_1: ClipVertex
-#     var vertex_2: ClipVertex
-
-#     fn __init__(inout self):
-#         self.vertex_1 = ClipVertex()
-#         self.vertex_2 = ClipVertex()
-
-#     fn __refitem__(inout self, i: Int) -> Reference[ClipVertex, i1_1, __lifetime_of(self)]:
-#         if i == 0:
-#             return Reference(self.vertex_1)
-#         else:
-#             return Reference(self.vertex_2)
-
-
 @value
 struct ClipVertex(CollectionElement):
     var v: Vec2
     var fp: FeaturePair
 
     fn __init__(inout self):
-        self.v = Vec2.zero()  # Assuming Vec2 has a default constructor
+        self.v = Vec2(0, 0)  # Assuming Vec2 has a default constructor
         self.fp = FeaturePair()  # Assuming FeaturePair takes an integer in its constructor
+
 
 fn flip(inout fp: FeaturePair):
     fp[].inEdge1, fp[].inEdge2 = fp[].inEdge2, fp[].inEdge1
@@ -71,9 +69,13 @@ fn clip_segment_to_line(
     var distance_0: Float32 = dot(normal, v_in[0].v) - offset
     var distance_1: Float32 = dot(normal, v_in[1].v) - offset
 
-    if distance_0 <= 0.0: v_out[(num_out := num_out + 1)] = v_in[0]
+    if distance_0 <= 0.0:
+        v_out[num_out] = v_in[0]
+        num_out += 1
 
-    if distance_1 <= 0.0: v_out[(num_out := num_out + 1)] = v_in[1]
+    if distance_1 <= 0.0: 
+        v_out[num_out] = v_in[1]
+        num_out += 1
 
     if distance_0 * distance_1 < 0.0:
         var interp: Float32 = distance_0 / (distance_0 - distance_1)
@@ -92,13 +94,8 @@ fn clip_segment_to_line(
 
     return num_out
 
-fn compute_incident_edge(
-        inout c: InlineArray[ClipVertex, 2],
-        h: Vec2,
-        pos: Vec2,
-        Rot: Mat22,
-        normal: Vec2
-    ):
+
+fn compute_incident_edge(inout c: InlineArray[ClipVertex, 2],h: Vec2, pos: Vec2, Rot: Mat22, normal: Vec2):
     # The normal is from the reference box. Convert it
     # to the incident box's frame and flip sign.
     var RotT: Mat22 = Rot.transpose()
