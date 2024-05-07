@@ -180,7 +180,7 @@ fn collide(
     # Find best axis
     var axis = Axis.FACE_A_X
     var separation = face_a.x
-    var normal = Rot_a.col1 if d_a.x > 0.0 else -Rot_a.col1# MARK: normal was wrong due to d_a.x = 0, in box2d d_a.x = 1.95185867e-09
+    var normal = Rot_a.col1 if d_a.x > 0.0 else -Rot_a.col1
 
     alias relative_to_l: Float32 = 0.95
     alias absolute_to_l: Float32 = 0.01
