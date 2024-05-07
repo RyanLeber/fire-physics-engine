@@ -53,10 +53,6 @@ struct Body(CollectionElement):
         self.I = inf[DType.float32]()
         self.invI = 0.0
 
-    # @always_inline
-    # fn __eq__(self, rhs: Self) -> Bool:
-    #     return memcmp(LegacyPointer.address_of(self), LegacyPointer.address_of(rhs), 1)
-
     @always_inline
     fn add_force(inout self, force: Vec2):
         self.force += force
