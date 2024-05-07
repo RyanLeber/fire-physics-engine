@@ -55,11 +55,12 @@ fn main() raises:
 
     var bodies = InlineArray[Body, 200](Body())
     var joints = InlineArray[Joint, 100](Joint())
-    var bomb: Optional[UnsafePointer[Body]] = None
+    # var bomb: Reference[Body, i1_1, __lifetime_of(bodies)]
+    var bomb = UnsafePointer[Body].get_null()
 
     var num_bodies: Int = 0
     var num_joints: Int = 0
-    var demo_index: Int = 0
+    # var demo_index: Int = 0
 
     var world = World(gravity, iterations)
 
@@ -101,6 +102,54 @@ fn main() raises:
         num_joints += 1
 
 
+    # Varying friction coefficients
+    @ parameter
+    fn Demo3():
+        var i = 0
+        bodies[i].set(Vec2(100.0, 20.0), inf[DType.float32]())
+        bodies[i].position = Vec2(0.0, -0.5 * bodies[i].width.y)
+        world.add(Reference(bodies[i]))
+        i += 1
+
+        bodies[i].set(Vec2(13.0, 0.25), inf[DType.float32]())
+        bodies[i].position = Vec2(-2.0, 11.0)
+        bodies[i].rotation = -0.25
+        world.add(Reference(bodies[i]))
+        i += 1
+
+        bodies[i].set(Vec2(0.25, 1.0), inf[DType.float32]())
+        bodies[i].position = Vec2(5.25, 9.5)
+        world.add(Reference(bodies[i]))
+        i += 1
+
+        bodies[i].set(Vec2(13.0, 0.25), inf[DType.float32]())
+        bodies[i].position = Vec2(2.0, 7.0)
+        bodies[i].rotation = 0.25
+        world.add(Reference(bodies[i]))
+        i += 1
+
+        bodies[i].set(Vec2(0.25, 1.0), inf[DType.float32]())
+        bodies[i].position = Vec2(-5.25, 5.5)
+        world.add(Reference(bodies[i]))
+        i += 1
+
+        bodies[i].set(Vec2(13.0, 0.25), inf[DType.float32]())
+        bodies[i].position = Vec2(-2.0, 3.0)
+        bodies[i].rotation = -0.25
+        world.add(Reference(bodies[i]))
+        i += 1
+
+        var friction = InlineArray[Float32, 5](0.75, 0.5, 0.35, 0.1, 0.0)
+        for j in range(5):
+            i += j
+            bodies[i].set(Vec2(0.5, 0.5), 25.0)
+            bodies[i].friction = friction[i]
+            bodies[i].position = Vec2(-7.5 + 2.0 * j, 14.0)
+            world.add(Reference(bodies[i]))
+
+        num_bodies = i
+
+
     # A vertical stack
     @parameter
     fn Demo4():
@@ -127,31 +176,30 @@ fn main() raises:
         world.clear()
         num_bodies = 0
         num_joints = 0
-        bomb = None
-        
-        demo_index = i
-
+        bomb = UnsafePointer[Body].get_null()
         if i == 0: Demo1()
         if i == 1: Demo2()
-        if i == 2: Demo4()
+        if i == 2: Demo3()
+        if i == 3: Demo4()
 
 
     @parameter
     fn launch_bomb():
-        if bomb is None:
+        if not bomb:
             bomb = UnsafePointer.address_of(bodies[num_bodies])
-            bomb.value()[][].set(Vec2(1.0, 1.0), 50.0)
-            bomb.value()[][].friction = 0.2
-            world.add(bomb.value()[])
+            bomb[].set(Vec2(1.0, 1.0), 50.0)
+            bomb[].friction = 0.2
+            world.add(bomb)
             num_bodies += 1
 
-        bomb.value()[][].position = Vec2(random_float64(-15.0, 15.0), 15.0)
-        bomb.value()[][].rotation = random_float64(-1.5, 1.5)
-        bomb.value()[][].velocity = bomb.value()[][].position * -1.5
-        bomb.value()[][].angularVelocity = random_float64(-20.0, 20.0)
+        bomb[].position = Vec2(random_float64(-15.0, 15.0), 15.0)
+        bomb[].rotation = random_float64(-1.5, 1.5)
+        bomb[].velocity = bomb[].position * -1.5
+        bomb[].angularVelocity = random_float64(-20.0, 20.0)
+
 
     @parameter
-    fn draw_body(body: UnsafePointer[Body], i: Int):
+    fn draw_body(body: Reference[Body, _, _]):
         # Calculate rotation matrix
         var R: Mat22 = Mat22(body[].rotation)
         var x: Vec2 = body[].position
@@ -165,7 +213,7 @@ fn main() raises:
 
         raylib.rl_begin(DrawModes.RL_LINES)
         # Choose color based on body
-        if body == bomb.value()[]:
+        if UnsafePointer.address_of(body) == bomb:
             raylib.rl_color_4ub(102, 229, 102, 255)
         else:
             raylib.rl_color_4ub(204, 204, 229, 255)
@@ -186,7 +234,7 @@ fn main() raises:
 
 
     @parameter
-    fn draw_joint(joint: UnsafePointer[Joint]):
+    fn draw_joint(joint: Reference[Joint, _, _]):
         # Extract body data
         var b1 = joint[].body1
         var b2 = joint[].body2
@@ -278,7 +326,7 @@ fn main() raises:
 
             # Draw bodies and joints
             for i in range(num_bodies):  
-                draw_body(Reference(bodies[i]), i)
+                draw_body(Reference(bodies[i]))
 
             for j in range(num_joints): 
                 draw_joint(Reference(joints[j]))
