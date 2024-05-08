@@ -130,7 +130,6 @@ struct Arbiter(CollectionElement):
             inout new_contacts: InlineArray[Contact, Self.MAX_POINTS],
             num_new_contacts: Int32,
             world_warm_start: Bool):
-
         var merged_contacts = InlineArray[Contact, Self.MAX_POINTS](Contact())
 
         for i in range(num_new_contacts):
@@ -204,6 +203,8 @@ struct Arbiter(CollectionElement):
                 self.b2[].velocity += P * self.b2[].invMass
                 self.b2[].angularVelocity += self.b2[].invI * cross(r2, P)
 
+            _ = c
+
 
     fn apply_impulse(inout self, accumulate_impulses: Bool):
         for i in range(self.num_contacts):
@@ -238,7 +239,7 @@ struct Arbiter(CollectionElement):
 
             # Relative velocity at contact
             dv = self.b2[].velocity + cross(self.b2[].angularVelocity, c[].r2) -
-                 self.b1[].velocity + cross(self.b1[].angularVelocity, c[].r1)
+                self.b1[].velocity - cross(self.b1[].angularVelocity, c[].r1)
 
             var tangent: Vec2 = cross(c[].normal, 1.0)
             var vt: Float32 = dot(dv, tangent)
