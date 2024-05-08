@@ -58,6 +58,18 @@ void _DrawRectanglePro(Rectangle *rec, Vector2 *origin, float rotation, Color *c
     DrawRectanglePro(*rec, *origin, rotation, *color);
 }
 
+
+void _DrawRectangleLines(int posX, int posY, int width, int height, Color *color)
+{
+    DrawRectangleLines(posX, posY, width, height, *color);
+}
+
+void _DrawRectangleRounded(Rectangle *rec, float roundness, int segments, Color *color)
+{
+    DrawRectangleRounded(*rec, roundness, segments, *color);
+}
+
+
 void _DrawPoly(Vector2 *center, int sides, float radius, float rotation, Color *color)
 {
     DrawPoly(*center, sides, radius, rotation, *color);

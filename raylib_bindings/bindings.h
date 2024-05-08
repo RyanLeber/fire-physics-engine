@@ -32,6 +32,10 @@ void _DrawCircleLines(int centerX, int centerY, float radius, Color *color);    
 
 void _DrawRectangleV(Vector2 *position, Vector2 *size, Color *color);
 void _DrawRectanglePro(Rectangle *rec, Vector2 *origin, float rotation, Color *color);
+
+void _DrawRectangleLines(int posX, int posY, int width, int height, Color *color);
+void _DrawRectangleRounded(Rectangle *rec, float roundness, int segments, Color *color);
+
 void _DrawPoly(Vector2 *center, int sides, float radius, float rotation, Color *color);
 void _DrawPolyLines(Vector2 *center, int sides, float radius, float rotation, Color *color);
 void _DrawPolyLinesEx(Vector2 *center, int sides, float radius, float rotation, float lineThick, Color *color);
