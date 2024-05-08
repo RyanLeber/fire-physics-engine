@@ -60,11 +60,14 @@ struct World:
                 var new_arb = Arbiter(bi, bj)
                 var key = ArbiterKey(bi, bj)
                 
-                if new_arb.num_contacts > 0:
-                    self.arbiters[key] = new_arb
+                if new_arb.num_contacts > 0:                    
+                    if key in self.arbiters:
+                        self.arbiters[key].update(new_arb.contacts, new_arb.num_contacts, self.warm_starting)
+
+                    else:
+                        self.arbiters[key] = new_arb
                         
                 elif key in self.arbiters:
-                    print("popping")
                     _ = self.arbiters.pop(key)
 
 
@@ -104,13 +107,14 @@ struct World:
             for j in range(len(self.joints)):
                 self.joints[j][].apply_impulse()
 
-        # Integrate Velocities
-        for b in self.bodies:
-            b[][].position += b[][].velocity * dt
-            b[][].rotation += dt * b[][].angularVelocity
+        # # Integrate Velocities
+        # for b_ptr in self.bodies:
+        #     var b = b_ptr[]
+        #     b[].position += b[].velocity * dt
+        #     b[].rotation += dt * b[].angularVelocity
 
-            b[][].force = Vec2(0,0)
-            b[][].torque = 0.0
+        #     b[].force = Vec2(0,0)
+        #     b[].torque = 0.0
 
         # Integrate Velocities
         for i in range(len(self.bodies)):
