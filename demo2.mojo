@@ -28,28 +28,40 @@ alias SCREENWIDTH: Int = 1280
 alias SCREENHEIGHT: Int = 720
 alias FPS = 60
 
+# alias demo_strings = InlineArray[StringLiteral, 9](
+#     "Demo 1: A Single Box",
+#     "Demo 2: Simple Pendulum",
+#     "Demo 3: Varying Friction Coefficients",
+#     "Demo 4: Randomized Stacking",
+#     "Demo 5: Pyramid Stacking",
+#     "Demo 6: A Teeter",
+#     "Demo 7: A Suspension Bridge",
+#     "Demo 8: Dominos",
+#     "Demo 9: Multi-pendulum"
+# )
+
 alias iterations: Int = 10
 alias gravity: Vec2 = Vec2(0.0, -10.0)
-
-alias demo_strings = Tuple(
-	"Demo 1: A Single Box",
-	"Demo 2: Simple Pendulum",
-	"Demo 3: Varying Friction Coefficients",
-	"Demo 4: Randomized Stacking",
-	"Demo 5: Pyramid Stacking",
-	"Demo 6: A Teeter",
-	"Demo 7: A Suspension Bridge",
-	"Demo 8: Dominos",
-	"Demo 9: Multi-pendulum"
-)
-
 
 fn main() raises:
     alias width: Int = SCREENWIDTH
     alias height: Int = SCREENHEIGHT
 
+    var demo_strings = InlineArray[StringLiteral, 9](
+        "Demo 1: A Single Box",
+        "Demo 2: Simple Pendulum",
+        "Demo 3: Varying Friction Coefficients",
+        "Demo 4: Randomized Stacking",
+        "Demo 5: Pyramid Stacking",
+        "Demo 6: A Teeter",
+        "Demo 7: A Suspension Bridge",
+        "Demo 8: Dominos",
+        "Demo 9: Multi-pendulum"
+    )
+
     var red = BuiltinColors.RED
     var black = BuiltinColors.BLACK
+    var maroon = BuiltinColors.MAROON
 
     var raylib = RayLib()
 
@@ -60,7 +72,7 @@ fn main() raises:
 
     var num_bodies: Int = 0
     var num_joints: Int = 0
-    # var demo_index: Int = 0
+    var demo_index: Int = 0
 
     var world = World(gravity, iterations)
 
@@ -74,7 +86,7 @@ fn main() raises:
 
         # Set the second box
         bodies[1].set(Vec2(1.0, 1.0), 200.0)
-        bodies[1].position = Vec2(0.0, 4.0)
+        bodies[1].position = Vec2(0.0, 5.0)
         world.add(Reference(bodies[1]))
         num_bodies += 1
 
@@ -177,6 +189,11 @@ fn main() raises:
         num_bodies = 0
         num_joints = 0
         bomb = UnsafePointer[Body].get_null()
+
+        print("b2_v:", bodies[1].velocity.x, bodies[1].velocity.y)
+
+        demo_index = i
+
         if i == 0: Demo1()
         if i == 1: Demo2()
         if i == 2: Demo3()
@@ -295,6 +312,23 @@ fn main() raises:
             launch_bomb()
             return
 
+    @parameter
+    fn draw_info_box():
+        var boarder = BuiltinColors.WHITE
+        var font_size = 20
+        var x = 20
+
+        var a = "(A)ccumulation: YES" if world.accumulate_impulses else "(A)ccumulation: NO"
+        var p = "(P)osition Correction: YES" if world.position_correction else "(P)osition Correction: NO"
+        var w = "(W)arm Starting: YES" if world.warm_starting else "(W)arm Starting: NO"
+
+        raylib.draw_rectangle_lines( 10, 10, 420, 170, Reference(boarder))
+        raylib.draw_text(demo_strings[demo_index].data(), x, 20, font_size, Reference(maroon))
+        raylib.draw_text("Keys: 1-9 Demos, Space to Launch Bomb".data(), x, 50, font_size, Reference(maroon))
+        raylib.draw_text(a.data(), x, 80, font_size, Reference(maroon))
+        raylib.draw_text(p.data(), x, 110, font_size, Reference(maroon))
+        raylib.draw_text(w.data(), x, 140, font_size, Reference(maroon))
+
 
     @parameter
     fn main_loop() raises:
@@ -315,14 +349,14 @@ fn main() raises:
         init_demo(i)
 
         while not raylib.window_should_close():
-            handle_keyboard_events()
+            draw_info_box()
 
             raylib.begin_drawing()
             raylib.clear_background(Reference(black))
             raylib.begin_mode_2d(Reference(camera))
             
             # Update the world
-            world.step (time_step)
+            world.step(time_step)
 
             # Draw bodies and joints
             for i in range(num_bodies):  
@@ -339,17 +373,18 @@ fn main() raises:
 
             raylib.end_mode_2d()
 
-            # raylib.draw_text('This is a raylib example', 10, 40, 20, Reference(dark_gray))
-            raylib.draw_fps(10, 10)
+            raylib.draw_fps(SCREENWIDTH - 90, 10)
 
             raylib.end_drawing()
+
+            handle_keyboard_events()
 
         raylib.close_window()
 
     main_loop()
 
     # _ = raylib
-    # _ = bodies
-    # _ = joints
+    _ = bodies
+    _ = joints
     _ = world
     # _ = demos
