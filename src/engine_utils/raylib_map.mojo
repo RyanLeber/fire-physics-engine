@@ -570,6 +570,11 @@ alias c_raylib_DrawRectangle = fn(x: Int32, y: Int32, width: Int32, height: Int3
 alias c_raylib_DrawRectangleV = fn(position: UnsafePointer[Vec2], size: UnsafePointer[Vec2], color: UnsafePointer[Color]) -> None
 alias c_raylib_DrawRectangleRec = fn(rect: UnsafePointer[Rectangle], color: UnsafePointer[Color]) -> None
 alias c_raylib_DrawRectanglePro = fn(rect: UnsafePointer[Rectangle], origin: UnsafePointer[Vec2], rotation: Float32, color: UnsafePointer[Color]) -> None
+
+alias c_raylib_DrawRectangleLines = fn(x: Int32, y: Int32, width: Int32, height: Int32, color: UnsafePointer[Color]) -> None
+alias c_raylib_DrawRectangleRounded = fn(rec: Rectangle, roundness: Float32, segments: Int, color: UnsafePointer[Color]) -> None
+alias c_raylib_DrawRectangleRoundedLines = fn(rec: Rectangle, roundness: Float32, segments: Int32, color: UnsafePointer[Color]) -> None
+
 alias c_raylib_DrawPoly = fn(center: UnsafePointer[Vec2], sides: Int32, radius: Float32, rotation: Float32, color: UnsafePointer[Color]) -> None
 alias c_raylib_DrawPolyLines = fn(center: UnsafePointer[Vec2], sides: Int32, radius: Float32, rotation: Float32, color: UnsafePointer[Color])  -> None
 alias c_raylib_DrawPolyLinesEx = fn(center: UnsafePointer[Vec2], sides: Int32, radius: Float32, rotation: Float32, line_thick: Float32, color: UnsafePointer[Color])  -> None
@@ -581,7 +586,7 @@ alias c_raylib_DrawCubeWires = fn(position: UnsafePointer[Vector3], width: Float
 alias c_raylib_DrawCubeWiresV = fn(position: UnsafePointer[Vector3], size: UnsafePointer[Vector3], color: UnsafePointer[Color]) -> None
 
 # Module: text
-alias c_raylib_DrawText_ptr = fn(text: StringLiteral, pos_x: Int32, pos_y: Int32, font_size: Int32, color: UnsafePointer[Color]) -> None
+alias c_raylib_DrawText_ptr = fn(text: DTypePointer[DType.int8], pos_x: Int32, pos_y: Int32, font_size: Int32, color: UnsafePointer[Color]) -> None
 
 # Module: rlglfw, low level rendering functions
 alias c_raylib_GetShapesTexture = fn() -> UnsafePointer[Texture2D]
@@ -665,6 +670,11 @@ struct RayLib:
     var draw_rectangle_v: c_raylib_DrawRectangleV
     var draw_rectangle_rect: c_raylib_DrawRectangleRec
     var draw_rectangle_pro: c_raylib_DrawRectanglePro
+
+    var draw_rectangle_lines: c_raylib_DrawRectangleLines
+    var draw_rectangle_rounded: c_raylib_DrawRectangleRounded
+    # var draw_rectangle_rounded_lines: c_raylib_DrawRectangleRoundedLines
+
     var draw_poly: c_raylib_DrawPoly
     var draw_poly_lines: c_raylib_DrawPolyLines
     var draw_poly_lines_ex: c_raylib_DrawPolyLinesEx
@@ -752,6 +762,11 @@ struct RayLib:
         self.draw_rectangle_v = raylib_external.get_function[c_raylib_DrawRectangleV]('_DrawRectangleV')
         self.draw_rectangle_rect = raylib_external.get_function[c_raylib_DrawRectangleRec]('_DrawRectangleRec')
         self.draw_rectangle_pro = raylib_external.get_function[c_raylib_DrawRectanglePro]('_DrawRectanglePro')
+
+        self.draw_rectangle_lines = raylib_external.get_function[c_raylib_DrawRectangleLines]('_DrawRectangleLines')
+        self.draw_rectangle_rounded = raylib_external.get_function[c_raylib_DrawRectangleRounded]('_DrawRectangleRounded')
+        # self.draw_rectangle_rounded_lines = raylib_external.get_function[c_raylib_DrawRectangleRoundedLines]('_DrawRectangleRoundedLines')
+
         self.draw_poly = raylib_external.get_function[c_raylib_DrawPoly]('_DrawPoly')
         self.draw_poly_lines = raylib_external.get_function[c_raylib_DrawPolyLines]('_DrawPolyLines')
         self.draw_poly_lines_ex = raylib_external.get_function[c_raylib_DrawPolyLinesEx]('_DrawPolyLinesEx')
