@@ -53,8 +53,8 @@ struct ClipVertex(CollectionElement):
 
 
 fn flip(inout fp: FeaturePair):
-    fp[].inEdge1, fp[].inEdge2 = fp[].inEdge2, fp[].inEdge1
-    fp[].outEdge1, fp[].outEdge2 = fp[].outEdge2, fp[].outEdge1
+    swap(fp[].inEdge1, fp[].inEdge2)
+    swap(fp[].outEdge1, fp[].outEdge2)
 
 
 fn clip_segment_to_line(
