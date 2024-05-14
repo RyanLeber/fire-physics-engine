@@ -16,9 +16,10 @@ from src.engine_utils import (
 
 @value
 struct Joint(CollectionElement):
-    """
-    An object to define a Physics Joint in 2D.\n
-    Attributes:\n
+    """An object to define a Physics Joint in 2D.
+
+    Attributes:
+    ```
         var M: Mat22
         var localAnchor1: Vec2
         var localAnchor2: Vec2
@@ -30,6 +31,7 @@ struct Joint(CollectionElement):
         var softness: Float32
         var body1: Self._ref_type
         var body2: Self._ref_type
+    ```
     """
     var M: Mat22
     var localAnchor1: Vec2
@@ -55,8 +57,22 @@ struct Joint(CollectionElement):
         self.biasFactor = 0.0
         self.softness = 0.0
 
-        self.body1 = UnsafePointer[Body].alloc(1)
-        self.body2 = UnsafePointer[Body].alloc(1)
+        self.body1 = UnsafePointer[Body].get_null()
+        self.body2 = UnsafePointer[Body].get_null()
+
+    fn reset(inout self):
+        self.M = Mat22(Vec2(0.0, 0.0),Vec2(0.0, 0.0))
+        self.localAnchor1 = Vec2(0.0, 0.0)
+        self.localAnchor2 = Vec2(0.0, 0.0)
+        self.r1 = Vec2(0.0, 0.0)
+        self.r2 = Vec2(0.0, 0.0)
+        self.bias = Vec2(0.0, 0.0)
+        self.P = Vec2(0.0, 0.0)
+        self.biasFactor = 0.0
+        self.softness = 0.0
+
+        self.body1 = UnsafePointer[Body].get_null()
+        self.body2 = UnsafePointer[Body].get_null()
 
     fn set(inout self, b1: Reference[Body], b2: Reference[Body], anchor: Vec2):
         self.body1 = b1
@@ -135,3 +151,18 @@ struct Joint(CollectionElement):
         self.body2[].angularVelocity += self.body2[].invI * cross(self.r2, impulse)
 
         self.P += impulse
+
+    fn __str__(self) -> String:
+        return (
+            "\n  M:          " + str(self.M) +
+            "\n  anchor1:    " + str(self.localAnchor1) +
+            "\n  anchor2:    " + str(self.localAnchor2) +
+            "\n  r1:         " + str(self.r1) +
+            "\n  r2:         " + str(self.r2) +
+            "\n  bias:       " + str(self.bias) +
+            "\n  P:          " + str(self.P) +
+            "\n  biasFactor: " + str(self.biasFactor) +
+            "\n  softness:   " + str(self.softness) +
+            "\n  body1: " + str(self.body1)+ "\n" + str(self.body1[]) +
+            "\n  body2: " + str(self.body2)+ "\n" + str(self.body2[]) 
+        )

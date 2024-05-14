@@ -53,6 +53,37 @@ struct Body(CollectionElement):
         self.I = inf[DType.float32]()
         self.invI = 0.0
 
+    fn reset(inout self):
+        self.rotation = 0.0
+        self.velocity = Vec2(0, 0)
+        self.angularVelocity = 0.0
+        self.force = Vec2(0, 0)
+        self.torque = 0.0
+        self.friction = 0.2
+        self.position = Vec2(0, 0)
+        self.width = Vec2(1.0, 1.0)
+        self.mass = inf[DType.float32]()
+        self.invMass = 0.0
+        self.I = inf[DType.float32]()
+        self.invI = 0.0
+
+    fn __str__(self) -> String:
+        return (
+            "    position:        " + str(self.position) +
+            "\n    velocity:        " + str(self.velocity) +
+            "\n    rotation:        " + str(self.rotation) +
+            "\n    angularVelocity: " + str(self.angularVelocity) +
+            "\n    force:           " + str(self.force) +
+            "\n    torque:          " + str(self.torque) +
+            "\n    friction:        " + str(self.friction) +
+            "\n    width:           " + str(self.width) +
+            "\n    mass:            " + str(self.mass) +
+            "\n    invMass:         " + str(self.invMass) +
+            "\n    I:               " + str(self.I) +
+            "\n    invI:            " + str(self.invI)
+        )
+
+
     @always_inline
     fn add_force(inout self, force: Vec2):
         self.force += force
