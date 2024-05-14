@@ -1,5 +1,5 @@
 
-from collections.dict import Dict
+from collections import Dict, Set
 
 from src.engine_utils import Vec2
 from .arbiter import Arbiter, ArbiterKey
@@ -28,13 +28,10 @@ struct World:
         self.bodies = List[UnsafePointer[Body]]()
         self.joints = List[UnsafePointer[Joint]]()
 
-        self.arbiters = Dict[ArbiterKey, Arbiter]() # Using a dictionary for the map
-        print("trigger __init__ World")
+        self.arbiters = Dict[ArbiterKey, Arbiter]()
 
     fn add(inout self, body_ref: UnsafePointer[Body]):
-        print("trigger add")
         self.bodies.append(body_ref)
-        print("added")
 
     fn add(inout self, joint_ref: UnsafePointer[Joint]):
         self.joints.append(joint_ref)
@@ -57,18 +54,23 @@ struct World:
                 if bi[].invMass == 0.0 and bj[].invMass == 0.0:
                     continue
 
-                var new_arb = Arbiter(bi, bj)
-                var key = ArbiterKey(bi, bj)
-                
-                if new_arb.num_contacts > 0:                    
+                # if bj[].velocity.y  > 10: # MARK: Velocity Check
+                #     print("high velocity!")
+
+                var key = ArbiterKey(int(bi), int(bj))
+                var new_arb: Arbiter = Arbiter(bi, bj)
+
+                if new_arb.num_contacts > 0:
                     if key in self.arbiters:
                         self.arbiters[key].update(new_arb.contacts, new_arb.num_contacts, self.warm_starting)
 
                     else:
                         self.arbiters[key] = new_arb
                         
-                elif key in self.arbiters:
-                    _ = self.arbiters.pop(key)
+                else:
+                    _ = self.arbiters.pop(key, new_arb)
+
+        # print("len arbiters:",len(self.arbiters))
 
 
     fn step(inout self, dt: Float32) raises:
@@ -77,13 +79,8 @@ struct World:
         # Determine overlapping bodies and update contact points.
         self.broad_phase()
 
-        if len(self.arbiters) > 2:
-            # breakpoint()
-            print("len arbiters:", len(self.arbiters))
-
         # Integrate forces.
         for i in range(len(self.bodies)):
-
             var b = self.bodies[i]
 
             if b[].invMass == 0.0:
@@ -92,8 +89,16 @@ struct World:
             b[].velocity += (b[].force * b[].invMass + self.gravity) * dt
             b[].angularVelocity = b[].angularVelocity + (dt * b[].invI * b[].torque)
 
+
+        var loop_iter = 0
         # Perform pre-steps.
         for arb in self.arbiters.values():
+
+            loop_iter += 1
+            if loop_iter == 2: 
+                print("\n\n\n\npre-step, x:", arb[].b2[].velocity.x, "y:", arb[].b2[].velocity.y, "           NUM_CONTACTS:", arb[].num_contacts)
+                # bomb_vel += str("pre-step, x: " + str(arb[].b2[].velocity.x) + " y: " + arb[].b2[].velocity.y + "\n")
+
             arb[].pre_step(inv_dt, self.position_correction, self.accumulate_impulses)
 
         for j in range(len(self.joints)):
@@ -101,25 +106,28 @@ struct World:
 
         # Perform iterations
         for _ in range(self.iterations):
+            var n = 0
             for arb in self.arbiters.values():
+                # n += 1
+                # if n == 2: 
+                #     print("\nAply-imp, x:", arb[].b2[].velocity.x, "y:", arb[].b2[].velocity.y)
+                #     for j in range(arb[].num_contacts):
+                #         print("contact", j, ":",arb[].contacts[0])
+
                 arb[].apply_impulse(self.accumulate_impulses)
 
             for j in range(len(self.joints)):
                 self.joints[j][].apply_impulse()
 
-        # # Integrate Velocities
-        # for b_ptr in self.bodies:
-        #     var b = b_ptr[]
-        #     b[].position += b[].velocity * dt
-        #     b[].rotation += dt * b[].angularVelocity
-
-        #     b[].force = Vec2(0,0)
-        #     b[].torque = 0.0
-
         # Integrate Velocities
         for i in range(len(self.bodies)):
-            self.bodies[i][].position += self.bodies[i][].velocity * dt
-            self.bodies[i][].rotation += dt * self.bodies[i][].angularVelocity
+            var b = self.bodies[i]
 
-            self.bodies[i][].force = Vec2(0,0)
-            self.bodies[i][].torque = 0.0
+            # if b[].velocity.y  > 10: # MARK: Velocity Check
+            #     print("high velocity!")
+
+            b[].position += b[].velocity * dt
+            b[].rotation += dt * b[].angularVelocity
+
+            b[].force = Vec2(0,0)
+            b[].torque = 0.0               
