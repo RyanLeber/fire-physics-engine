@@ -86,9 +86,9 @@ struct Vec2(Absable):
     fn __isub__(inout self, other: Vec2):
         self.data = self.data - other.data
 
-    @always_inline
-    fn __imul__(inout self, k: Float32):
-        self.data = self.data * k
+    # @always_inline
+    # fn __imul__(inout self, k: Float32):
+    #     self.data = self.data * k
 
     @always_inline
     fn length(self) -> Float32:
@@ -98,9 +98,12 @@ struct Vec2(Absable):
     fn __neg__(self) -> Vec2:
         return -self.data
 
+    @always_inline
     fn __abs__(self) -> Vec2:
         return abs(self.data)
 
+    fn __str__(self) -> String:
+        return String(self.data)
 
     @always_inline
     fn normalize(self) -> Vec2:
@@ -143,11 +146,15 @@ struct Mat22(Absable):
         return Vec2(A.col1.x * v.x + A.col2.x * v.y, A.col1.y * v.x + A.col2.y * v.y)
 
     @always_inline
-    fn __add__(self, other: Self) -> Mat22:
-        return Mat22(self.col1 + other.col1, self.col2 + other.col2)
+    fn __add__(self, other: Self) -> Self:
+        return Self(self.col1 + other.col1, self.col2 + other.col2)
 
-    fn __abs__(self) -> Mat22:
-        return Mat22(abs(self.col1), abs(self.col2))
+    @always_inline
+    fn __abs__(self) -> Self:
+        return Self(abs(self.col1), abs(self.col2))
+
+    fn __str__(self) -> String:
+        return "[col1: " + str(self.col1) + ", col2: " + str(self.col2) + " ]"
 
     fn transpose(self) -> Mat22:
         return Mat22(Vec2(self.col1.x, self.col2.x), Vec2(self.col1.y, self.col2.y))
@@ -161,7 +168,6 @@ struct Mat22(Absable):
         debug_assert(det != 0.0, "Determinant is zero. Matrix is not invertible.")
         det = 1.0 / det
         return Mat22(Vec2(det * d, -det * c), Vec2(-det * b, det * a))
-
 
 
 fn dot(a: Vec2, b: Vec2) -> Float32:
@@ -187,35 +193,3 @@ fn mat_mul(A: Mat22, B: Mat22) -> Mat22:
 
 fn sign(x: Float32) -> Float32:
     return -1.0 if x < 0.0 else 1.0
-
-
-# fn abs_float(a: Float32) -> Float32:
-#     return abs(a)
-
-# fn abs_vec(a: Vec2) -> Vec2:
-#     return abs[SIMD[DType., 2]]()
-
-# fn abs_mat(A: Mat22) -> Mat22:
-#     return Mat22(abs_vec(A.col1), abs_vec(A.col2))
-
-
-# fn min_float(a: Float32, b: Float32) -> Float32:
-#     return min(a, b)
-
-# fn max_float(a: Float32, b: Float32) -> Float32:
-#     return max(a, b)
-
-# fn clamp(a: Float32, low: Float32, high: Float32) -> Float32:
-#     return max_float(low, min_float(a, high))
-
-# fn swap(a, b):
-#     return b, a
-
-# fn random_range() -> Float32:
-#     return 2.0 * random.random() - 1.0
-
-
-
-# # Helper function to replicate C++'s sign function
-# fn sign(value: Float32) -> Float32:
-#     return (value > 0) - (value < 0)
