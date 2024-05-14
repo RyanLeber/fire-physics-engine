@@ -16,20 +16,25 @@ struct FeaturePair(CollectionElement):
     fn __refitem__(inout self) -> Reference[Edges, i1_1, __lifetime_of(self)]:
         if not self.e.isa[Edges]():
             self.e = Edges()
-        return self.e.get[Edges]()
+        return self.e[Edges]
 
     fn __getattr__[name: StringLiteral](self) -> Int32:
         if name == "value":
-            return self.e.get[Int32]()[]
+            return self.e[Int32]
         else:
             constrained[name == "value", "can only access value member"]()
             return 0
 
     fn __eq__(self, other: Self) -> Bool:
-        if self.e.get[Int32]()[] ==
-            other.e.get[Int32]()[]:
+        if self.e[Int32] ==
+            other.e[Int32]:
                 return True
         else: return False
+
+    fn __str__(self) -> String:
+        var val = self.value
+        return "value: " + str(val) + ", edges: "+ str(SIMD[DType.int32, 4](val & 0xFF, (val >> 8) & 0xFF, (val >> 16) & 0xFF, (val >> 24) & 0xFF))
+
 
 
 @value
@@ -74,15 +79,64 @@ struct Contact(CollectionElement):
         self.massTangent = 0.0
         self.bias = 0.0
         self.feature = FeaturePair()
+    
+    fn __str__(self) -> String:
+        return (
+            "\n position:    " + str(self.position) +
+            "\n normal:      " + str(self.normal) +
+            "\n r1:          " + str(self.r1) +
+            "\n r2           " + str(self.r2) +
+            "\n separation:  " + str(self.separation) +
+            "\n Pn:          " + str(self.Pn) +
+            "\n Pt:          " + str(self.Pt) +
+            "\n Pnb:         " + str(self.Pnb) +
+            "\n massNormal:  " + str(self.massNormal) +
+            "\n massTanget:  " + str(self.massTangent) +
+            "\n bias:        " + str(self.bias) +
+            "\n featurePair: " + str(self.feature)
+        )
 
+
+# @value
+# struct ArbiterKey(KeyElement):
+#     var b1: UnsafePointer[Body]
+#     var b2: UnsafePointer[Body]
+
+#     fn __init__(inout self, b1: UnsafePointer[Body], b2: UnsafePointer[Body]):
+#         # print(b1, b2)
+#         if b1 < b2:
+#             self.b1 = b1
+#             self.b2 = b2
+#         else:
+#             self.b1 = b2
+#             self.b2 = b1
+
+#     fn __hash__(self) -> Int:
+#         return hash(int(self.b1) + int(self.b2))
+
+#     fn __eq__(self, other: ArbiterKey) -> Bool:
+#         if self.b1 == other.b1 and self.b2 == other.b2:
+#             return True
+#         if self.b1 == other.b2 and self.b2 == other.b1:
+#             return True
+#         return False
+
+#     fn __ne__(self, other: ArbiterKey) -> Bool:
+#         if self.b1 == other.b1 and self.b2 == other.b2:
+#             return False
+#         if self.b1 == other.b2 and self.b2 == other.b1:
+#             return False
+#         return True
+
+#     fn __str__(self) -> String:
+#         return "b1: " + str(self.b1) + ", b2:" + str(self.b2)
 
 @value
 struct ArbiterKey(KeyElement):
-    var b1: UnsafePointer[Body]
-    var b2: UnsafePointer[Body]
+    var b1: Int64
+    var b2: Int64
 
-    fn __init__(inout self, b1: UnsafePointer[Body], b2: UnsafePointer[Body]):
-        # print(b1, b2)
+    fn __init__(inout self, b1: Int64, b2: Int64):
         if b1 < b2:
             self.b1 = b1
             self.b2 = b2
@@ -91,13 +145,24 @@ struct ArbiterKey(KeyElement):
             self.b2 = b1
 
     fn __hash__(self) -> Int:
-        return hash(int(self.b1) + int(self.b2))
+        return hash(self.b1 + self.b2)
 
     fn __eq__(self, other: ArbiterKey) -> Bool:
-        return self.b1 == other.b1 and self.b2 == other.b2
+        if self.b1 == other.b1 and self.b2 == other.b2:
+            return True
+        if self.b1 == other.b2 and self.b2 == other.b1:
+            return True
+        return False
 
     fn __ne__(self, other: ArbiterKey) -> Bool:
-        return not self.b1 == other.b1 and not self.b2 == other.b2
+        if self.b1 == other.b1 and self.b2 == other.b2:
+            return False
+        if self.b1 == other.b2 and self.b2 == other.b1:
+            return False
+        return True
+
+    fn __str__(self) -> String:
+        return "b1: " + str(self.b1) + ", b2:" + str(self.b2)
 
 
 @value
@@ -120,10 +185,11 @@ struct Arbiter(CollectionElement):
             self.b2 = b1
 
         self.contacts = InlineArray[Contact, Self.MAX_POINTS](Contact())
-
         self.num_contacts = collide(self.contacts, self.b1, self.b2)
 
         self.friction = sqrt(self.b1[].friction * self.b2[].friction)
+
+
 
     fn update(
             inout self,
@@ -169,6 +235,9 @@ struct Arbiter(CollectionElement):
         var k_allowedPenetration: Float32 = 0.01
         var k_biasFactor: Float32 = 0.2 if world_pos_cor else 0.0
 
+        var b1 = self.b1
+        var b2 = self.b2
+
         for i in range(self.num_contacts):
 
             var c = Reference(self.contacts[i])
@@ -202,19 +271,22 @@ struct Arbiter(CollectionElement):
 
                 self.b2[].velocity += P * self.b2[].invMass
                 self.b2[].angularVelocity += self.b2[].invI * cross(r2, P)
+                _ = P
 
-            _ = c
+        _ = b1
+        _ = b2
 
 
     fn apply_impulse(inout self, accumulate_impulses: Bool):
+        var b1 = Reference(self.b1)
+        var b2 = Reference(self.b2)
         for i in range(self.num_contacts):
             var c = Reference(self.contacts[i])
             c[].r1 = c[].position - self.b1[].position
             c[].r2 = c[].position - self.b2[].position
 
             # Relative velocity at contact
-            var dv: Vec2 = self.b2[].velocity + cross(self.b2[].angularVelocity, c[].r2) -
-                self.b1[].velocity - cross(self.b1[].angularVelocity, c[].r1)
+            var dv: Vec2 = self.b2[].velocity + cross(self.b2[].angularVelocity, c[].r2) - self.b1[].velocity - cross(self.b1[].angularVelocity, c[].r1)
 
             # Compute normal impulse
             var vn: Float32 = dot(dv, c[].normal)
@@ -251,7 +323,7 @@ struct Arbiter(CollectionElement):
 
                 # Clamp friction
                 var old_tangent_impulse: Float32 = c[].Pt
-                c[].Pt = (old_tangent_impulse + dPt).clamp( -maxPt, maxPt)
+                c[].Pt = (old_tangent_impulse + dPt).clamp(-maxPt, maxPt)
                 dPt = c[].Pt - old_tangent_impulse
             else:
                 var maxPt: Float32 = self.friction * dPn
@@ -265,3 +337,17 @@ struct Arbiter(CollectionElement):
 
             self.b2[].velocity += Pt * self.b2[].invMass
             self.b2[].angularVelocity += self.b2[].invI * cross(c[].r2, Pt)
+
+        _ = b1
+        _ = b2
+
+
+    fn __str__(self) -> String:
+        return (
+            "\n friction:    " + str(self.friction) +
+            "\n numContacts: " + str(self.num_contacts) +
+            "\n contact1:\n" + str(self.contacts[0]) +
+            "\n contact2:\n" + str(self.contacts[1]) +
+            "\n  body1: " + str(self.b1)+ "\n" + str(self.b1[]) +
+            "\n  body2: " + str(self.b2)+ "\n" + str(self.b2[]) 
+        )
