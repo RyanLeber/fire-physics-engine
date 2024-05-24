@@ -4,8 +4,6 @@ from collections import Optional
 from .body import Body
 from .world import World
 from src.engine_utils import (
-    i1_1,
-    i1_0,
     Vec2,
     Mat22,
     scalar_vec_mul,

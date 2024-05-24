@@ -4,10 +4,6 @@ from random import random_float64
 
 alias K_PI = 3.14159265358979323846264
 
-alias i1_0 =  __mlir_attr.`0 : i1`
-alias i1_1 =  __mlir_attr.`1 : i1`
-
-
 @register_passable
 struct Vec2(Absable):
     @always_inline
@@ -138,8 +134,22 @@ struct Mat22(Absable):
     fn __init__(inout self, angle: Float32):
         var c: Float32 = cos(angle)
         var s: Float32 = sin(angle)
+
         self.col1 = Vec2(c, s)
         self.col2 = Vec2(-s, c)
+
+    # @always_inline
+    # fn __init__(inout self, angle: Float32):
+    #     var c = cos(angle)
+    #     var s = sin(angle)
+    #     if abs(c) < abs(s):
+    #         c = 0
+    #         s = 1 * sign(s)
+    #     else:
+    #         c = 1 * sign(c)
+    #         s = 0
+    #     self.col1 = Vec2(c, s)
+    #     self.col2 = Vec2(-s, c)
 
     @always_inline
     fn __mul__(A: Self, v: Vec2) -> Vec2:
@@ -191,5 +201,6 @@ fn mat_add(A: Mat22, B: Mat22) -> Mat22:
 fn mat_mul(A: Mat22, B: Mat22) -> Mat22:
     return Mat22(A * B.col1, A * B.col2)
 
+@always_inline
 fn sign(x: Float32) -> Float32:
     return -1.0 if x < 0.0 else 1.0
