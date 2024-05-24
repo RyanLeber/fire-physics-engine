@@ -2,7 +2,8 @@
 from collections import Dict, Set
 
 from src.engine_utils import Vec2
-from .arbiter import Arbiter, ArbiterKey
+from .arbiterkey import ArbiterKey
+from .arbiter import Arbiter
 from .body import Body
 from .joint import Joint
 
@@ -54,9 +55,6 @@ struct World:
                 if bi[].invMass == 0.0 and bj[].invMass == 0.0:
                     continue
 
-                # if bj[].velocity.y  > 10: # MARK: Velocity Check
-                #     print("high velocity!")
-
                 var key = ArbiterKey(int(bi), int(bj))
                 var new_arb: Arbiter = Arbiter(bi, bj)
 
@@ -66,11 +64,8 @@ struct World:
 
                     else:
                         self.arbiters[key] = new_arb
-                        
                 else:
                     _ = self.arbiters.pop(key, new_arb)
-
-        # print("len arbiters:",len(self.arbiters))
 
 
     fn step(inout self, dt: Float32) raises:
@@ -89,16 +84,8 @@ struct World:
             b[].velocity += (b[].force * b[].invMass + self.gravity) * dt
             b[].angularVelocity = b[].angularVelocity + (dt * b[].invI * b[].torque)
 
-
-        var loop_iter = 0
         # Perform pre-steps.
         for arb in self.arbiters.values():
-
-            loop_iter += 1
-            if loop_iter == 2: 
-                print("\n\n\n\npre-step, x:", arb[].b2[].velocity.x, "y:", arb[].b2[].velocity.y, "           NUM_CONTACTS:", arb[].num_contacts)
-                # bomb_vel += str("pre-step, x: " + str(arb[].b2[].velocity.x) + " y: " + arb[].b2[].velocity.y + "\n")
-
             arb[].pre_step(inv_dt, self.position_correction, self.accumulate_impulses)
 
         for j in range(len(self.joints)):
@@ -106,14 +93,7 @@ struct World:
 
         # Perform iterations
         for _ in range(self.iterations):
-            var n = 0
             for arb in self.arbiters.values():
-                # n += 1
-                # if n == 2: 
-                #     print("\nAply-imp, x:", arb[].b2[].velocity.x, "y:", arb[].b2[].velocity.y)
-                #     for j in range(arb[].num_contacts):
-                #         print("contact", j, ":",arb[].contacts[0])
-
                 arb[].apply_impulse(self.accumulate_impulses)
 
             for j in range(len(self.joints)):
@@ -122,10 +102,6 @@ struct World:
         # Integrate Velocities
         for i in range(len(self.bodies)):
             var b = self.bodies[i]
-
-            # if b[].velocity.y  > 10: # MARK: Velocity Check
-            #     print("high velocity!")
-
             b[].position += b[].velocity * dt
             b[].rotation += dt * b[].angularVelocity
 
