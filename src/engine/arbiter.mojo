@@ -2,9 +2,10 @@
 from math import sqrt
 from utils import Variant, InlineArray
 
-from src.engine_utils import Vec2, Mat22, mat_add, scalar_vec_mul, cross, dot, i1_1 
+from src.engine_utils import Vec2, Mat22, mat_add, scalar_vec_mul, cross, dot
 from .body import Body
 from .collide import collide
+from .arbiterkey import ArbiterKey
 
 @value
 struct FeaturePair(CollectionElement):
@@ -13,21 +14,20 @@ struct FeaturePair(CollectionElement):
     fn __init__(inout self):
         self.e = Int32(0)
 
-    fn __refitem__(inout self) -> Reference[Edges, i1_1, __lifetime_of(self)]:
+    fn __refitem__(inout self) -> Reference[Edges, True, __lifetime_of(self)]:
         if not self.e.isa[Edges]():
             self.e = Edges()
         return self.e[Edges]
 
     fn __getattr__[name: StringLiteral](self) -> Int32:
         if name == "value":
-            return self.e[Int32]
+            return self.e.unsafe_get[Int32]()[]
         else:
             constrained[name == "value", "can only access value member"]()
             return 0
 
     fn __eq__(self, other: Self) -> Bool:
-        if self.e[Int32] ==
-            other.e[Int32]:
+        if self.e.unsafe_get[Int32]()[] == other.e.unsafe_get[Int32]()[]:
                 return True
         else: return False
 
@@ -97,74 +97,6 @@ struct Contact(CollectionElement):
         )
 
 
-# @value
-# struct ArbiterKey(KeyElement):
-#     var b1: UnsafePointer[Body]
-#     var b2: UnsafePointer[Body]
-
-#     fn __init__(inout self, b1: UnsafePointer[Body], b2: UnsafePointer[Body]):
-#         # print(b1, b2)
-#         if b1 < b2:
-#             self.b1 = b1
-#             self.b2 = b2
-#         else:
-#             self.b1 = b2
-#             self.b2 = b1
-
-#     fn __hash__(self) -> Int:
-#         return hash(int(self.b1) + int(self.b2))
-
-#     fn __eq__(self, other: ArbiterKey) -> Bool:
-#         if self.b1 == other.b1 and self.b2 == other.b2:
-#             return True
-#         if self.b1 == other.b2 and self.b2 == other.b1:
-#             return True
-#         return False
-
-#     fn __ne__(self, other: ArbiterKey) -> Bool:
-#         if self.b1 == other.b1 and self.b2 == other.b2:
-#             return False
-#         if self.b1 == other.b2 and self.b2 == other.b1:
-#             return False
-#         return True
-
-#     fn __str__(self) -> String:
-#         return "b1: " + str(self.b1) + ", b2:" + str(self.b2)
-
-@value
-struct ArbiterKey(KeyElement):
-    var b1: Int64
-    var b2: Int64
-
-    fn __init__(inout self, b1: Int64, b2: Int64):
-        if b1 < b2:
-            self.b1 = b1
-            self.b2 = b2
-        else:
-            self.b1 = b2
-            self.b2 = b1
-
-    fn __hash__(self) -> Int:
-        return hash(self.b1 + self.b2)
-
-    fn __eq__(self, other: ArbiterKey) -> Bool:
-        if self.b1 == other.b1 and self.b2 == other.b2:
-            return True
-        if self.b1 == other.b2 and self.b2 == other.b1:
-            return True
-        return False
-
-    fn __ne__(self, other: ArbiterKey) -> Bool:
-        if self.b1 == other.b1 and self.b2 == other.b2:
-            return False
-        if self.b1 == other.b2 and self.b2 == other.b1:
-            return False
-        return True
-
-    fn __str__(self) -> String:
-        return "b1: " + str(self.b1) + ", b2:" + str(self.b2)
-
-
 @value
 struct Arbiter(CollectionElement):
     alias MAX_POINTS = 2
@@ -188,7 +120,6 @@ struct Arbiter(CollectionElement):
         self.num_contacts = collide(self.contacts, self.b1, self.b2)
 
         self.friction = sqrt(self.b1[].friction * self.b2[].friction)
-
 
 
     fn update(
@@ -235,29 +166,29 @@ struct Arbiter(CollectionElement):
         var k_allowedPenetration: Float32 = 0.01
         var k_biasFactor: Float32 = 0.2 if world_pos_cor else 0.0
 
-        var b1 = self.b1
-        var b2 = self.b2
+        var b1 = Reference(self.b1[])
+        var b2 = Reference(self.b2[])
 
         for i in range(self.num_contacts):
 
             var c = Reference(self.contacts[i])
 
-            var r1: Vec2 = c[].position - self.b1[].position
-            var r2: Vec2 = c[].position - self.b2[].position
+            var r1: Vec2 = c[].position - b1[].position
+            var r2: Vec2 = c[].position - b2[].position
 
             # Precompute normal mass, tangent mass, and bias.
             var rn1: Float32 = dot(r1, c[].normal)
             var rn2: Float32 = dot(r2, c[].normal)
-            var kNormal: Float32 = self.b1[].invMass + self.b2[].invMass
+            var kNormal: Float32 = b1[].invMass + b2[].invMass
 
-            kNormal += self.b1[].invI * (dot(r1, r1) - rn1 * rn1) + self.b2[].invI * (dot(r2, r2) - rn2 * rn2)
+            kNormal += b1[].invI * (dot(r1, r1) - rn1 * rn1) + b2[].invI * (dot(r2, r2) - rn2 * rn2)
             c[].massNormal = 1.0 / kNormal
 
             var tangent: Vec2 = cross(c[].normal, 1.0)
             var rt1: Float32 = dot(r1, tangent)
             var rt2: Float32 = dot(r2, tangent)
             var kTangent: Float32 = self.b1[].invMass + self.b2[].invMass
-            kTangent += self.b1[].invI * (dot(r1, r1) - rt1 * rt1) + self.b2[].invI * (dot(r2, r2) - rt2 * rt2)
+            kTangent += b1[].invI * (dot(r1, r1) - rt1 * rt1) + b2[].invI * (dot(r2, r2) - rt2 * rt2)
             c[].massTangent = 1.0 / kTangent
 
             c[].bias = -k_biasFactor * inv_dt * min[DType.float32](0.0, c[].separation + k_allowedPenetration)
@@ -266,27 +197,23 @@ struct Arbiter(CollectionElement):
                 # Apply normal + friction impulse
                 var P: Vec2 = (c[].normal * c[].Pn) + (tangent * c[].Pt)
 
-                self.b1[].velocity -= P * self.b1[].invMass
-                self.b1[].angularVelocity -= self.b1[].invI * cross(r1, P)
+                b1[].velocity -= P * b1[].invMass
+                b1[].angularVelocity -= b1[].invI * cross(r1, P)
 
-                self.b2[].velocity += P * self.b2[].invMass
-                self.b2[].angularVelocity += self.b2[].invI * cross(r2, P)
-                _ = P
-
-        _ = b1
-        _ = b2
+                b2[].velocity += P * b2[].invMass
+                b2[].angularVelocity += b2[].invI * cross(r2, P)
 
 
     fn apply_impulse(inout self, accumulate_impulses: Bool):
-        var b1 = Reference(self.b1)
-        var b2 = Reference(self.b2)
+        var b1 = Reference(self.b1[])
+        var b2 = Reference(self.b2[])
         for i in range(self.num_contacts):
             var c = Reference(self.contacts[i])
-            c[].r1 = c[].position - self.b1[].position
-            c[].r2 = c[].position - self.b2[].position
+            c[].r1 = c[].position - b1[].position
+            c[].r2 = c[].position - b2[].position
 
             # Relative velocity at contact
-            var dv: Vec2 = self.b2[].velocity + cross(self.b2[].angularVelocity, c[].r2) - self.b1[].velocity - cross(self.b1[].angularVelocity, c[].r1)
+            var dv = b2[].velocity + cross(b2[].angularVelocity, c[].r2) - b1[].velocity - cross(b1[].angularVelocity, c[].r1)
 
             # Compute normal impulse
             var vn: Float32 = dot(dv, c[].normal)
@@ -303,15 +230,14 @@ struct Arbiter(CollectionElement):
             # Apply contact impulse
             var Pn: Vec2 = c[].normal * dPn
 
-            self.b1[].velocity -= Pn * self.b1[].invMass
-            self.b1[].angularVelocity -= self.b1[].invI * cross(c[].r1, Pn)
+            b1[].velocity -= Pn * b1[].invMass
+            b1[].angularVelocity -= b1[].invI * cross(c[].r1, Pn)
 
-            self.b2[].velocity += Pn * self.b2[].invMass
-            self.b2[].angularVelocity += self.b2[].invI * cross(c[].r2, Pn)
+            b2[].velocity += Pn * b2[].invMass
+            b2[].angularVelocity += b2[].invI * cross(c[].r2, Pn)
 
             # Relative velocity at contact
-            dv = self.b2[].velocity + cross(self.b2[].angularVelocity, c[].r2) -
-                self.b1[].velocity - cross(self.b1[].angularVelocity, c[].r1)
+            dv = b2[].velocity + cross(b2[].angularVelocity, c[].r2) - b1[].velocity - cross(b1[].angularVelocity, c[].r1)
 
             var tangent: Vec2 = cross(c[].normal, 1.0)
             var vt: Float32 = dot(dv, tangent)
@@ -332,14 +258,11 @@ struct Arbiter(CollectionElement):
             # Apply contact impulse
             var Pt: Vec2 = tangent * dPt
 
-            self.b1[].velocity -= Pt * self.b1[].invMass
-            self.b1[].angularVelocity -= self.b1[].invI * cross(c[].r1, Pt)
+            b1[].velocity -= Pt * b1[].invMass
+            b1[].angularVelocity -= b1[].invI * cross(c[].r1, Pt)
 
-            self.b2[].velocity += Pt * self.b2[].invMass
-            self.b2[].angularVelocity += self.b2[].invI * cross(c[].r2, Pt)
-
-        _ = b1
-        _ = b2
+            b2[].velocity += Pt * b2[].invMass
+            b2[].angularVelocity += b2[].invI * cross(c[].r2, Pt)
 
 
     fn __str__(self) -> String:
