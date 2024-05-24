@@ -4,13 +4,11 @@ from utils import InlineArray
 from .arbiter import FeaturePair, Contact
 from .body import Body
 from src.engine_utils import (
-    i1_1,
-    i1_0,
-    Vec2,
-    Mat22,
-    dot,
-    mat_mul,
-    sign
+        Vec2,
+        Mat22,
+        dot,
+        mat_mul,
+        sign
     )
 
 
@@ -77,9 +75,6 @@ fn clip_segment_to_line(
         v_out[num_out] = v_in[1]
         num_out += 1
 
-    if num_out > 2:
-        print("WARNING! num_out > 2:", num_out)
-
     if distance_0 * distance_1 < 0.0:
         var interp: Float32 = distance_0 / (distance_0 - distance_1)
 
@@ -102,7 +97,7 @@ fn compute_incident_edge(inout c: InlineArray[ClipVertex, 2],h: Vec2, pos: Vec2,
     # The normal is from the reference box. Convert it
     # to the incident box's frame and flip sign.
     var RotT: Mat22 = Rot.transpose()
-    var n: Vec2 = -(RotT *normal)
+    var n: Vec2 = -(RotT * normal)
     var nAbs: Vec2 = abs(n)
 
     if nAbs.x > nAbs.y:
@@ -142,6 +137,7 @@ fn compute_incident_edge(inout c: InlineArray[ClipVertex, 2],h: Vec2, pos: Vec2,
 
     c[0].v = pos + Rot * c[0].v 
     c[1].v = pos + Rot * c[1].v
+
 
 fn collide(
         inout contacts: InlineArray[Contact, 2],
@@ -236,7 +232,7 @@ fn collide(
         compute_incident_edge(incident_edge, h_b, pos_b, Rot_b, front_normal)
 
     elif axis == Axis.FACE_B_X:
-        front_normal = normal
+        front_normal = -normal
         front = dot(pos_b, front_normal) + h_b.x
         side_normal = Rot_b.col2
         var side: Float32 = dot(pos_b, side_normal)
@@ -248,7 +244,7 @@ fn collide(
 
     # elif axis == Axis.FACE_B_Y:
     else:
-        front_normal = normal
+        front_normal = -normal
         front = dot(pos_b, front_normal) + h_b.y
         side_normal = Rot_b.col1
         var side: Float32 = dot(pos_b, side_normal)
@@ -259,7 +255,6 @@ fn collide(
         compute_incident_edge(incident_edge, h_a, pos_a, Rot_a, front_normal)
 
     # clip other face with 5 box planes (1 face plane, 4 edge planes)
-
     var clip_points1 = InlineArray[ClipVertex, 2](ClipVertex())
     var clip_points2 = InlineArray[ClipVertex, 2](ClipVertex())
     var num_points: Int
@@ -278,7 +273,6 @@ fn collide(
 
 	# Now clipPoints2 contains the clipping points.
 	# Due to roundoff, it is possible that clipping removes all points.
-
     var num_contacts = 0
     for i in range(2):
         var separation: Float32 = dot(front_normal, clip_points2[i].v) - front
