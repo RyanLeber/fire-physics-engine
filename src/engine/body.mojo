@@ -1,10 +1,10 @@
 
-from math.limit import inf
 from math import isinf
 from memory import memcmp
 
 from src.engine_utils import Vec2
 
+alias INF = Float32.MAX
 
 @value
 struct Body(CollectionElement):
@@ -48,9 +48,9 @@ struct Body(CollectionElement):
         self.friction = 0.2
         self.position = Vec2(0, 0)
         self.width = Vec2(1.0, 1.0)
-        self.mass = inf[DType.float32]()
+        self.mass = INF
         self.invMass = 0.0
-        self.I = inf[DType.float32]()
+        self.I = INF
         self.invI = 0.0
 
     fn reset(inout self):
@@ -62,9 +62,9 @@ struct Body(CollectionElement):
         self.friction = 0.2
         self.position = Vec2(0, 0)
         self.width = Vec2(1.0, 1.0)
-        self.mass = inf[DType.float32]()
+        self.mass = INF
         self.invMass = 0.0
-        self.I = inf[DType.float32]()
+        self.I = INF
         self.invI = 0.0
 
     fn __str__(self) -> String:
@@ -98,5 +98,5 @@ struct Body(CollectionElement):
             self.invI = 1.0 / self.I
         else:
             self.invMass = 0.0
-            self.I = inf[DType.float32]()
+            self.I = INF
             self.invI = 0.0
