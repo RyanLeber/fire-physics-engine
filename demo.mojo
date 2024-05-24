@@ -1,6 +1,6 @@
 
 from random import random_float64, seed, random_si64
-from math.limit import inf
+
 from utils import InlineArray
 from collections import Optional, Set, Dict
 
@@ -19,8 +19,6 @@ from src.engine_utils import (
         CameraProjection,
         Keyboard,
         DrawModes,
-        i1_1,
-        i1_0,
         Mat22,
         Vec2
     )
@@ -34,13 +32,14 @@ alias iterations: Int = 10
 alias gravity: Vec2 = Vec2(0.0, -10.0)
 
 alias K_PI = 3.14159265358979323846264
+alias INF = Float32.MAX
 
 # MARK: Main
 fn main() raises:
     alias width: Int = SCREENWIDTH
     alias height: Int = SCREENHEIGHT
 
-    # seed()
+    seed()
 
     var demo_strings = InlineArray[StringLiteral, 9](
         "Demo 1: A Single Box",
@@ -56,7 +55,6 @@ fn main() raises:
 
     var red = BuiltinColors.RED
     var black = BuiltinColors.BLACK
-    var maroon = BuiltinColors.MAROON
     var light_red = Color(148, 68, 68, 255)
 
     var raylib = RayLib()
@@ -70,21 +68,13 @@ fn main() raises:
     var demo_index: Int = 0
     var time_step: Float32 = 1.0 / 60.0
 
-    var ptr_set = List[Int]()
-    print("[", end=" ")
-    for i in range(15):
-        var ptr = UnsafePointer.address_of(bodies[i])
-        ptr_set.append(int(ptr))
-        print(ptr, end=" ")
-    print("]")
-
     var world = World(gravity, iterations) 
 
     # MARK: Platform
     @parameter
     fn demo_0():
         # Set the first box
-        bodies[0].set(Vec2(100.0, 20.0), inf[DType.float32]())
+        bodies[0].set(Vec2(100.0, 20.0), INF)
         bodies[0].position = Vec2(0.0, -0.5 * bodies[0].width.y)
         world.add(Reference(bodies[0]))
         num_bodies += 1
@@ -94,7 +84,7 @@ fn main() raises:
     @parameter
     fn demo_1():
         # Set the first box
-        bodies[0].set(Vec2(100.0, 20.0), inf[DType.float32]())
+        bodies[0].set(Vec2(100.0, 20.0), INF)
         bodies[0].position = Vec2(0.0, -0.5 * bodies[0].width.y)
         world.add(Reference(bodies[0]))
         num_bodies += 1
@@ -110,7 +100,7 @@ fn main() raises:
     @parameter
     fn demo_2():
         # Set the first box
-        bodies[0].set(Vec2(100.0, 20.0), inf[DType.float32]())
+        bodies[0].set(Vec2(100.0, 20.0), INF)
         bodies[0].friction = 0.2
         bodies[0].position = Vec2(0.0, -0.5 * bodies[0].width.y)
         bodies[0].rotation = 0.0
@@ -134,34 +124,34 @@ fn main() raises:
     @ parameter
     fn demo_3():
         var i = 0
-        bodies[i].set(Vec2(100.0, 20.0), inf[DType.float32]())
+        bodies[i].set(Vec2(100.0, 20.0), INF)
         bodies[i].position = Vec2(0.0, -0.5 * bodies[i].width.y)
         world.add(Reference(bodies[i]))
         i += 1
 
-        bodies[i].set(Vec2(13.0, 0.25), inf[DType.float32]())
+        bodies[i].set(Vec2(13.0, 0.25), INF)
         bodies[i].position = Vec2(-2.0, 11.0)
         bodies[i].rotation = -0.25
         world.add(Reference(bodies[i]))
         i += 1
 
-        bodies[i].set(Vec2(0.25, 1.0), inf[DType.float32]())
+        bodies[i].set(Vec2(0.25, 1.0), INF)
         bodies[i].position = Vec2(5.25, 9.5)
         world.add(Reference(bodies[i]))
         i += 1
 
-        bodies[i].set(Vec2(13.0, 0.25), inf[DType.float32]())
+        bodies[i].set(Vec2(13.0, 0.25), INF)
         bodies[i].position = Vec2(2.0, 7.0)
         bodies[i].rotation = 0.25
         world.add(Reference(bodies[i]))
         i += 1
 
-        bodies[i].set(Vec2(0.25, 1.0), inf[DType.float32]())
+        bodies[i].set(Vec2(0.25, 1.0), INF)
         bodies[i].position = Vec2(-5.25, 5.5)
         world.add(Reference(bodies[i]))
         i += 1
 
-        bodies[i].set(Vec2(13.0, 0.25), inf[DType.float32]())
+        bodies[i].set(Vec2(13.0, 0.25), INF)
         bodies[i].position = Vec2(-2.0, 3.0)
         bodies[i].rotation = -0.25
         world.add(Reference(bodies[i]))
@@ -182,7 +172,7 @@ fn main() raises:
     @parameter
     fn demo_4():
         # Set the first box
-        bodies[0].set(Vec2(100.0, 20.0), inf[DType.float32]())
+        bodies[0].set(Vec2(100.0, 20.0), INF)
         bodies[0].friction = 0.2
         bodies[0].position = Vec2(0.0, -0.5 * bodies[0].width.y)
         bodies[0].rotation = 0.0
@@ -203,7 +193,7 @@ fn main() raises:
     @parameter
     fn demo_7():
         var i: Int = 0
-        bodies[i].set(Vec2(100.0, 20.0), inf[DType.float32]())
+        bodies[i].set(Vec2(100.0, 20.0), INF)
         bodies[i].friction = 0.2
         bodies[i].position = Vec2(0.0, -0.5 * bodies[i].width.y)
         bodies[i].rotation = 0.0
@@ -213,11 +203,11 @@ fn main() raises:
         var num_planks: Int = 15
         var mass: Float32 = 50.0
 
-        for _ in range(num_planks):
+        for j in range(num_planks):
             i += 1
             bodies[i].set(Vec2(1.0, 0.25), mass)
             bodies[i].friction = 0.2
-            bodies[i].position = Vec2(-8.5 + 1.25 * i, 5.0)
+            bodies[i].position = Vec2(-8.5 + 1.25 * j, 5.0)
             world.add(Reference(bodies[i]))
 
         # Tuning
@@ -289,8 +279,7 @@ fn main() raises:
             world.add(bomb)
             num_bodies += 1
 
-        bomb[].position = Vec2(0, 15.0)
-        # bomb[].position = Vec2(random_float64(-15.0, 15.0), 15.0)
+        bomb[].position = Vec2(random_float64(-15.0, 15.0), 15.0)
         bomb[].rotation = random_float64(-1.5, 1.5)
         bomb[].velocity = bomb[].position * -1.5
         bomb[].angularVelocity = random_float64(-20.0, 20.0)
@@ -434,10 +423,7 @@ fn main() raises:
         var i = 1
         init_demo(i)
 
-        var arb_colors = Dict[ArbiterKey, Color]()
-
         while not raylib.window_should_close():
-
             raylib.begin_drawing()
             raylib.clear_background(Reference(black))
             raylib.begin_mode_2d(Reference(camera))
@@ -452,17 +438,11 @@ fn main() raises:
             for j in range(num_joints): 
                 draw_joint(Reference(joints[j]))
 
+            # draw contact points
             for item in world.arbiters.items():
-                if not item[].key in arb_colors:
-                    var g = random_si64(0, 255).cast[DType.uint8]()
-                    var b = random_si64(0, 255).cast[DType.uint8]()
-                    var point = Color(230, g, b, 255 )
-                    arb_colors[item[].key] = point
-
                 for i in range(item[].value.num_contacts):
                     var p = item[].value.contacts[i].position
-                    var tmp = arb_colors[item[].key]
-                    raylib.draw_circle_v(Reference(p), 0.08, Reference(tmp))
+                    raylib.draw_circle_v(Reference(p), 0.08, Reference(red))
 
             raylib.end_mode_2d()
 
