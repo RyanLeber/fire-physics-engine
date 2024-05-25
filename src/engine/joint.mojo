@@ -79,8 +79,8 @@ struct Joint(CollectionElement):
         var Rot1T = Mat22(self.body1[].rotation).transpose()
         var Rot2T = Mat22(self.body2[].rotation).transpose()
 
-        self.localAnchor1 = Rot1T * anchor - self.body1[].position
-        self.localAnchor2 = Rot2T * anchor - self.body2[].position
+        self.localAnchor1 = Rot1T * (anchor - self.body1[].position)
+        self.localAnchor2 = Rot2T * (anchor - self.body2[].position)
 
         self.P = Vec2(0.0, 0.0)
         self.softness = 0.0
@@ -90,26 +90,28 @@ struct Joint(CollectionElement):
 
         self.r1 = Mat22(self.body1[].rotation) * self.localAnchor1
         self.r2 = Mat22(self.body2[].rotation) * self.localAnchor2
+
         # Compute K matrix
         var K1 = Mat22()
         K1.col1[0] = self.body1[].invMass + self.body2[].invMass
-        K1.col2[0] = 0.0
         K1.col1[1] = 0.0
+
+        K1.col2[0] = 0.0
         K1.col2[1] = self.body1[].invMass + self.body2[].invMass
 
         var K2 = Mat22()
-        K2.col1[0] = self.body1[].invI * self.r1[1] * self.r1[1]
-        K2.col2[0] = -self.body1[].invI * self.r1[0] * self.r1[1]
-
+        K2.col1[0] =  self.body1[].invI * self.r1[1] * self.r1[1]
         K2.col1[1] = -self.body1[].invI * self.r1[0] * self.r1[1]
-        K2.col2[1] = self.body1[].invI * self.r1[0] * self.r1[0]
+
+        K2.col2[0] = -self.body1[].invI * self.r1[0] * self.r1[1]
+        K2.col2[1] =  self.body1[].invI * self.r1[0] * self.r1[0]
 
         var K3 = Mat22()
-        K3.col1[0] = self.body2[].invI * self.r2[1] * self.r2[1]
-        K3.col2[0] = -self.body2[].invI * self.r2[0] * self.r2[1]
-
+        K3.col1[0] =  self.body2[].invI * self.r2[1] * self.r2[1]
         K3.col1[1] = -self.body2[].invI * self.r2[0] * self.r2[1]
-        K3.col2[1] = self.body2[].invI * self.r2[0] * self.r2[0]
+
+        K3.col2[0] = -self.body2[].invI * self.r2[0] * self.r2[1]
+        K3.col2[1] =  self.body2[].invI * self.r2[0] * self.r2[0]
 
         var K = K1 + K2 + K3
         K.col1[0] += self.softness
@@ -131,14 +133,15 @@ struct Joint(CollectionElement):
         if world_warm_start:
             self.body1[].velocity -= self.P * self.body1[].invMass
             self.body1[].angularVelocity -= self.body1[].invI * cross(self.r1, self.P)
+
             self.body2[].velocity += self.P * self.body2[].invMass
             self.body2[].angularVelocity += self.body2[].invI * cross(self.r2, self.P)
+
         else:
             self.P = Vec2(0.0, 0.0)
 
     fn apply_impulse(inout self):
-        var dv = self.body2[].velocity + cross(self.body2[].angularVelocity, self.r2) -
-            self.body1[].velocity + cross(self.body1[].angularVelocity, self.r1)
+        var dv = self.body2[].velocity + cross(self.body2[].angularVelocity, self.r2) - self.body1[].velocity - cross(self.body1[].angularVelocity, self.r1)
 
         var impulse = self.M * (self.bias - dv - self.P * self.softness)
 
