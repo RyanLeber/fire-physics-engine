@@ -14,10 +14,10 @@ struct FeaturePair(CollectionElement):
     fn __init__(inout self):
         self.e = Int32(0)
 
-    fn __refitem__(inout self) -> Reference[Edges, True, __lifetime_of(self)]:
-        if not self.e.isa[Edges]():
-            self.e = Edges()
-        return self.e[Edges]
+    fn __getitem__(self: Reference[Self, True, _]) -> ref [self.lifetime] Edges:
+        if not self[].e.isa[Edges]():
+            self[].e = Edges()
+        return self[].e[Edges]
 
     fn __getattr__[name: StringLiteral](self) -> Int32:
         if name == "value":
