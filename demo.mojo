@@ -1,5 +1,6 @@
 
 from random import random_float64, seed, random_si64
+from time import now
 
 from utils import InlineArray
 from collections import Optional, Set, Dict
@@ -27,7 +28,7 @@ from src.engine_utils import (
 # MARK: Constants
 alias SCREENWIDTH: Int = 1280
 alias SCREENHEIGHT: Int = 720
-alias FPS = 120
+alias FPS = 170
 alias iterations: Int = 10
 alias gravity: Vec2 = Vec2(0.0, -10.0)
 
@@ -124,69 +125,72 @@ fn main() raises:
     # MARK: demo_3, Varying friction coefficients
     @ parameter
     fn demo_3():
-        var i = 0
-        bodies[i].set(Vec2(100.0, 20.0), INF)
-        bodies[i].position = Vec2(0.0, -0.5 * bodies[i].width.y)
-        world.add(Reference(bodies[i]))
-        i += 1
+        var b = 0
+        bodies[b].set(Vec2(100.0, 20.0), INF)
+        bodies[b].position = Vec2(0.0, -0.5 * bodies[b].width.y)
+        world.add(Reference(bodies[b]))
+        b += 1
 
-        bodies[i].set(Vec2(13.0, 0.25), INF)
-        bodies[i].position = Vec2(-2.0, 11.0)
-        bodies[i].rotation = -0.25
-        world.add(Reference(bodies[i]))
-        i += 1
+        bodies[b].set(Vec2(13.0, 0.25), INF)
+        bodies[b].position = Vec2(-2.0, 11.0)
+        bodies[b].rotation = -0.25
+        world.add(Reference(bodies[b]))
+        b += 1
 
-        bodies[i].set(Vec2(0.25, 1.0), INF)
-        bodies[i].position = Vec2(5.25, 9.5)
-        world.add(Reference(bodies[i]))
-        i += 1
+        bodies[b].set(Vec2(0.25, 1.0), INF)
+        bodies[b].position = Vec2(5.25, 9.5)
+        world.add(Reference(bodies[b]))
+        b += 1
 
-        bodies[i].set(Vec2(13.0, 0.25), INF)
-        bodies[i].position = Vec2(2.0, 7.0)
-        bodies[i].rotation = 0.25
-        world.add(Reference(bodies[i]))
-        i += 1
+        bodies[b].set(Vec2(13.0, 0.25), INF)
+        bodies[b].position = Vec2(2.0, 7.0)
+        bodies[b].rotation = 0.25
+        world.add(Reference(bodies[b]))
+        b += 1
 
-        bodies[i].set(Vec2(0.25, 1.0), INF)
-        bodies[i].position = Vec2(-5.25, 5.5)
-        world.add(Reference(bodies[i]))
-        i += 1
+        bodies[b].set(Vec2(0.25, 1.0), INF)
+        bodies[b].position = Vec2(-5.25, 5.5)
+        world.add(Reference(bodies[b]))
+        b += 1
 
-        bodies[i].set(Vec2(13.0, 0.25), INF)
-        bodies[i].position = Vec2(-2.0, 3.0)
-        bodies[i].rotation = -0.25
-        world.add(Reference(bodies[i]))
-        i += 1
+        bodies[b].set(Vec2(13.0, 0.25), INF)
+        bodies[b].position = Vec2(-2.0, 3.0)
+        bodies[b].rotation = -0.25
+        world.add(Reference(bodies[b]))
+        b += 1
 
         var friction = InlineArray[Float32, 5](0.75, 0.5, 0.35, 0.1, 0.0)
-        for j in range(5):
-            bodies[i].set(Vec2(0.5, 0.5), 25.0)
-            bodies[i].friction = friction[j]
-            bodies[i].position = Vec2(-17.5 + 2.0 * i, 16.0)
-            world.add(Reference(bodies[i]))
-            i += 1
+        for i in range(5):
+            bodies[b].set(Vec2(0.5, 0.5), 25.0)
+            bodies[b].friction = friction[i]
+            bodies[b].position = Vec2(-7.5 + 2.0 * i, 16.0)
+            world.add(Reference(bodies[b]))
+            b += 1
 
-        num_bodies = i
+        num_bodies = b
 
 
     # MARK: demo_4, A vertical stack
     @parameter
     fn demo_4():
+        var b = 0
         # Set the first box
-        bodies[0].set(Vec2(100.0, 20.0), INF)
-        bodies[0].friction = 0.2
-        bodies[0].position = Vec2(0.0, -0.5 * bodies[0].width.y)
-        bodies[0].rotation = 0.0
-        world.add(Reference(bodies[0]))
-        num_bodies += 1
+        bodies[b].set(Vec2(100.0, 20.0), INF)
+        bodies[b].friction = 0.2
+        bodies[b].position = Vec2(0.0, -0.5 * bodies[b].width.y)
+        bodies[b].rotation = 0.0
+        world.add(Reference(bodies[b]))
+        b += 1
 
-        for i in range(1, 10):
-            bodies[i].set(Vec2(1.0, 1.0), 1.0)
-            bodies[i].friction = 0.2
+        for i in range(10):
+            bodies[b].set(Vec2(1.0, 1.0), 1.0)
+            bodies[b].friction = 0.2
             var x = random_float64(-0.1, 0.1)
-            bodies[i].position = Vec2(x, 0.51 + 1.05 * i)
-            world.add(Reference(bodies[i]))
-            num_bodies += 1
+            bodies[b].position = Vec2(x, 0.51 + 1.05 * i)
+            world.add(Reference(bodies[b]))
+            b += 1
+
+        num_bodies = b
 
 
     # MARK: demo_5, A pyramid
@@ -321,7 +325,8 @@ fn main() raises:
         var b = 0
         bodies[b].set(Vec2(100.0, 20.0), INF)
         bodies[b].position = Vec2(0.0, -0.5 * bodies[b].width.y)
-        world.add(Reference(bodies[b]))
+        var b1 = Reference(bodies[b])
+        world.add(b1)
         b += 1
 
         bodies[b].set(Vec2(12.0, 0.5), INF)
@@ -339,8 +344,7 @@ fn main() raises:
         bodies[b].set(Vec2(14.0, 0.5), INF)
         bodies[b].position = Vec2(1.0, 6.0)
         bodies[b].rotation = 0.3
-        var b1 = Reference(bodies[b])
-        world.add(b1)
+        world.add(Reference(bodies[b]))
         b += 1
 
         bodies[b].set(Vec2(0.5, 3.0), INF)
@@ -576,7 +580,12 @@ fn main() raises:
         var i = 1
         init_demo(i)
 
+        alias multiplyer = 1000 / 1024
+
         while not raylib.window_should_close():
+
+            # var start = now()
+
             raylib.begin_drawing()
             raylib.clear_background(Reference(black))
             raylib.begin_mode_2d(Reference(camera))
@@ -601,12 +610,17 @@ fn main() raises:
 
             raylib.end_mode_2d()
 
-            raylib.draw_fps(SCREENWIDTH - 90, 10)
+            # raylib.draw_fps(SCREENWIDTH - 90, 10)
 
             raylib.end_drawing()
 
             handle_keyboard_events()
             draw_info_box()
+
+            # var dur = now() - start
+            # print("Time taken for this iteration:",  dur//1000, " microseconds")
+
+
 
         raylib.close_window()
 
