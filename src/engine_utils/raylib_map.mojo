@@ -310,21 +310,8 @@ struct Rectangle(CollectionElement):
         else:
             return self.data[3]
 
-    @always_inline
-    fn __setattr__[name: StringLiteral](inout self, val: Float32):
-        constrained[name == "x" or name == "y" or name == "width" or name == "height", "can only access with x, y, width, or height members"]()
-        if name == "x":
-            self.data[0] = val
-        elif name == "y":
-            self.data[1] = val
-        elif name == "width":
-            self.data[2] = val
-        else:
-            self.data[3] = val
-
 
 # MARK: Camera3D
-# @register_passable("trivial")
 @value
 struct Camera3D:
     """A camera object to define a camera in 3D scenes.
@@ -360,7 +347,6 @@ struct Camera3D:
 
 
 # MARK: Camera2D
-# @register_passable("trivial")
 @value
 struct Camera2D:
     """A camera object to define a camera in 2D scenes.
@@ -389,20 +375,6 @@ struct Camera2D:
         self.target = Vec2(val)
         self.rotation = val
         self.zoom = val
-
-
-# @register_passable("trivial")
-# struct Color:
-#     var r: UInt8
-#     var g: UInt8
-#     var b: UInt8
-#     var a: UInt8
-
-#     fn __init__(inout self, r: UInt8, g: UInt8, b: UInt8, a: UInt8):
-#             self.r = r
-#             self.g = g
-#             self.b = b
-#             self.a = a
 
 
 # MARK: Color
@@ -483,7 +455,6 @@ struct Texture2D:
 #%%%%%%%%%%%%%%%%%%%%%%%%
 # Core
 alias c_raylib_InitWindow = fn(width: Int32, height: Int32, title: StringLiteral) -> None
-""" Test"""
 alias c_raylib_UpdateCamera3D = fn(camera: UnsafePointer[Camera3D], mode: Int32) -> None
 alias c_raylib_UpdateCamera2D = fn(camera: UnsafePointer[Camera2D], mode: Int32) -> None
 alias c_raylib_WindowShouldClose = fn() -> Int32
@@ -592,9 +563,8 @@ alias c_raylib_DrawText_ptr = fn(text: DTypePointer[DType.int8], pos_x: Int32, p
 alias c_raylib_GetShapesTexture = fn() -> UnsafePointer[Texture2D]
 alias c_raylib_GetShapesTextureRectangle = fn() -> UnsafePointer[Rectangle]
 
-# alias RAYLIB_PATH = '/home/ryan/raylib_edits/raylib/build/raylib/libraylib.so' # path to editted raylib
+
 alias RAYLIB_PATH = '/usr/local/lib/libraylib.so'
-# alias RAYLIB_EXTERNAL_BINDINGS_PATH = '/home/ryan/projects/raylib_bindings/lib/libraylib_bindings.so'
 alias RAYLIB_EXTERNAL_BINDINGS_PATH = '/home/ryan/mojo-projects/fire-physics-engine/raylib_bindings/lib/libraylib_bindings.so'
 
 # MARK: RayLib
@@ -602,7 +572,6 @@ alias RAYLIB_EXTERNAL_BINDINGS_PATH = '/home/ryan/mojo-projects/fire-physics-eng
 struct RayLib:
     # raylib internal bindings
     var init_window: c_raylib_InitWindow
-    """Test."""
     var update_camera_3d: c_raylib_UpdateCamera3D
     var update_camera_2d: c_raylib_UpdateCamera2D
     var window_should_close: c_raylib_WindowShouldClose
