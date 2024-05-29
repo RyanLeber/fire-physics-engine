@@ -6,14 +6,18 @@
   <p align="center">
     A 2D physics engine built in mojo. 🔥
   </p>
-    ![pendulum gif](assets/pendulum.gif)
+  <img src="https://github.com/RyanLeber/fire-physics-engine/blob/main/assets/pyrmid2.gif" alt="Pendulum GIF">
 </div>
 
 # Overview
+
 This project is currently just a demo to test out Mojo's capabilities. I plan to expand on it, and build a small game engine around it as mojo progresses. Feel free to message me with any questions.
 
 Currently the largest constraint is ffi support in Mojo. The rendering is a bit janky as it uses raylib. Mojo's ffi is not great at calling functions from external libs and can't take structs directly. Also the DLHandle must be passed around anywhere raylib is needed. RayLib does not use pointers for most of its function calls, so the project contains a small set of bindings for compatibility.
 
+<div align="center">
+  <img src="https://github.com/RyanLeber/fire-physics-engine/blob/main/assets/pendulum.gif" alt="Pendulum GIF">
+</div>
 
 ## Roadmap (contributors welcome!):
 - Replace broad phase collision detection.
