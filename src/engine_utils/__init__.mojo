@@ -1,6 +1,4 @@
 from .MathUtils import (
-    i1_0,
-    i1_1,
     Vec2,
     Mat22,
     dot,
