@@ -5,12 +5,6 @@
   <h2 align="center">Fire-Physics-Engine</h3>
   <p align="center">
     A 2D physics engine built in mojo. 🔥
-    <br/>
-
-   ![Written in Mojo][language-shield]
-   [![MIT License][license-shield]][license-url]
-   [![Contributors Welcome][contributors-shield]][contributors-url]
-   
   </p>
 </div>
 
