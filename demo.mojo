@@ -623,7 +623,7 @@ fn main() raises:
     # MARK: main_loop
     @parameter
     fn main_loop() raises:
-        raylib.init_window(width, height, 'Hello Mojo')
+        raylib.init_window(width, height, 'Fire Physics Engine')
         raylib.set_target_fps(FPS)
 
         var camera: Camera2D = Camera2D()
