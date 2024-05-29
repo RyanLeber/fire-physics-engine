@@ -61,9 +61,7 @@ Warning: This project uses the nightly build of Mojo, and has only been tested o
 
 ## Contributing
   
-Small fixes and improvements are much appreciated. If you are considering larger contributions, feel free to contact me. If you find a bug or have an idea for a feature, please use our issue tracker. Before creating a new issue, please:
-* Check if the issue already exists. If an issue is already reported, you can contribute by commenting on the existing issue.
-* If not, create a new issue and include all the necessary details to understand/recreate the problem or feature request.
+Small fixes and improvements are much appreciated. If you are considering larger contributions, feel free to contact me. If you find a bug or have an idea for a feature, please use the issue tracker.
 
 ### Creating A Pull Request
 
