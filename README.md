@@ -2,7 +2,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <h2 align="center">Fire-Physics-Engine</h3>
+  <h2 align="center">Fire Physics Engine</h3>
   <p align="center">
     A 2D physics engine built in mojo. 🔥
   </p>
