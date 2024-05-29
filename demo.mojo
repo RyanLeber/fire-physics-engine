@@ -61,9 +61,10 @@ fn main() raises:
     var raylib = RayLib()
 
     var bodies = InlineArray[Body, 200](Body())
-    alias bodies_life = __lifetime_of(bodies)
     var joints = InlineArray[Joint[__lifetime_of(bodies)], 100](Joint[__lifetime_of(bodies)]())
+
     var bomb = Optional[Reference[Body, True, __lifetime_of(bodies)]]()
+
     var num_bodies: Int = 0
     var num_joints: Int = 0
     var demo_index: Int = 0
