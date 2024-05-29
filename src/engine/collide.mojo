@@ -51,8 +51,8 @@ struct ClipVertex(CollectionElement):
 
 
 fn flip(inout fp: FeaturePair):
-    swap(fp[].inEdge1, fp[].inEdge2)
-    swap(fp[].outEdge1, fp[].outEdge2)
+    swap(fp[].in_edge1, fp[].in_edge2)
+    swap(fp[].out_edge1, fp[].out_edge2)
 
 
 fn clip_segment_to_line(
@@ -81,68 +81,68 @@ fn clip_segment_to_line(
         v_out[num_out].v = v_in[0].v + (v_in[1].v - v_in[0].v) * interp
         if distance_0 > 0.0:
             v_out[num_out].fp = v_in[0].fp
-            v_out[num_out].fp[].inEdge1 = clip_edge
-            v_out[num_out].fp[].inEdge2 = EdgeNumbers.NO_EDGE
+            v_out[num_out].fp[].in_edge1 = clip_edge
+            v_out[num_out].fp[].in_edge2 = EdgeNumbers.NO_EDGE
 
         else:
             v_out[num_out].fp = v_in[1].fp
-            v_out[num_out].fp[].outEdge1 = clip_edge
-            v_out[num_out].fp[].outEdge2 = EdgeNumbers.NO_EDGE
+            v_out[num_out].fp[].out_edge1 = clip_edge
+            v_out[num_out].fp[].out_edge2 = EdgeNumbers.NO_EDGE
         num_out += 1
 
     return num_out
 
 
-fn compute_incident_edge(inout c: InlineArray[ClipVertex, 2],h: Vec2, pos: Vec2, Rot: Mat22, normal: Vec2):
+fn compute_incident_edge(inout c: InlineArray[ClipVertex, 2],h: Vec2, pos: Vec2, rot: Mat22, normal: Vec2):
     # The normal is from the reference box. Convert it
     # to the incident box's frame and flip sign.
-    var RotT: Mat22 = Rot.transpose()
-    var n: Vec2 = -(RotT * normal)
+    var rotT: Mat22 = rot.transpose()
+    var n: Vec2 = -(rotT * normal)
     var nAbs: Vec2 = abs(n)
 
     if nAbs.x > nAbs.y:
         if sign(n.x) > 0.0:
             c[0].v = Vec2(h.x, -h.y)
-            c[0].fp[].inEdge2 = EdgeNumbers.EDGE3
-            c[0].fp[].outEdge2 = EdgeNumbers.EDGE4
+            c[0].fp[].in_edge2 = EdgeNumbers.EDGE3
+            c[0].fp[].out_edge2 = EdgeNumbers.EDGE4
 
             c[1].v = Vec2(h.x, h.y)
-            c[1].fp[].inEdge2 = EdgeNumbers.EDGE4
-            c[1].fp[].outEdge2 = EdgeNumbers.EDGE1
+            c[1].fp[].in_edge2 = EdgeNumbers.EDGE4
+            c[1].fp[].out_edge2 = EdgeNumbers.EDGE1
         else:
             c[0].v = Vec2(-h.x, h.y)
-            c[0].fp[].inEdge2 = EdgeNumbers.EDGE1
-            c[0].fp[].outEdge2 = EdgeNumbers.EDGE2
+            c[0].fp[].in_edge2 = EdgeNumbers.EDGE1
+            c[0].fp[].out_edge2 = EdgeNumbers.EDGE2
 
             c[1].v = Vec2(-h.x, -h.y)
-            c[1].fp[].inEdge2 = EdgeNumbers.EDGE2
-            c[1].fp[].outEdge2 = EdgeNumbers.EDGE3
+            c[1].fp[].in_edge2 = EdgeNumbers.EDGE2
+            c[1].fp[].out_edge2 = EdgeNumbers.EDGE3
     else:
         if sign(n.y) > 0.0:
             c[0].v = Vec2(h.x, h.y)
-            c[0].fp[].inEdge2 = EdgeNumbers.EDGE4
-            c[0].fp[].outEdge2 = EdgeNumbers.EDGE1
+            c[0].fp[].in_edge2 = EdgeNumbers.EDGE4
+            c[0].fp[].out_edge2 = EdgeNumbers.EDGE1
 
             c[1].v = Vec2(-h.x, h.y)
-            c[1].fp[].inEdge2 = EdgeNumbers.EDGE1
-            c[1].fp[].outEdge2 = EdgeNumbers.EDGE2
+            c[1].fp[].in_edge2 = EdgeNumbers.EDGE1
+            c[1].fp[].out_edge2 = EdgeNumbers.EDGE2
         else:
             c[0].v = Vec2(-h.x, -h.y)
-            c[0].fp[].inEdge2 = EdgeNumbers.EDGE2
-            c[0].fp[].outEdge2 = EdgeNumbers.EDGE3
+            c[0].fp[].in_edge2 = EdgeNumbers.EDGE2
+            c[0].fp[].out_edge2 = EdgeNumbers.EDGE3
 
             c[1].v = Vec2(h.x, -h.y)
-            c[1].fp[].inEdge2 = EdgeNumbers.EDGE3
-            c[1].fp[].outEdge2 = EdgeNumbers.EDGE4
+            c[1].fp[].in_edge2 = EdgeNumbers.EDGE3
+            c[1].fp[].out_edge2 = EdgeNumbers.EDGE4
 
-    c[0].v = pos + Rot * c[0].v 
-    c[1].v = pos + Rot * c[1].v
+    c[0].v = pos + rot * c[0].v 
+    c[1].v = pos + rot * c[1].v
 
 
 fn collide(
         inout contacts: InlineArray[Contact, 2],
-        body_a: UnsafePointer[Body],
-        body_b: UnsafePointer[Body]
+        body_a: Reference[Body],
+        body_b: Reference[Body]
     ) -> Int:
 
     # Setup
@@ -152,17 +152,17 @@ fn collide(
     var pos_a: Vec2 = body_a[].position
     var pos_b: Vec2 = body_b[].position
 
-    var Rot_a: Mat22 = Mat22(body_a[].rotation)
-    var Rot_b: Mat22 = Mat22(body_b[].rotation)
+    var rot_a: Mat22 = Mat22(body_a[].rotation)
+    var rot_b: Mat22 = Mat22(body_b[].rotation)
 
-    var Rot_a_t: Mat22 = Rot_a.transpose()
-    var Rot_b_t: Mat22 = Rot_b.transpose()
+    var rot_a_t: Mat22 = rot_a.transpose()
+    var rot_b_t: Mat22 = rot_b.transpose()
 
     var d_p: Vec2 = pos_b - pos_a
-    var d_a: Vec2 = Rot_a_t * d_p
-    var d_b: Vec2 = Rot_b_t * d_p
+    var d_a: Vec2 = rot_a_t * d_p
+    var d_b: Vec2 = rot_b_t * d_p
 
-    var C: Mat22 = mat_mul(Rot_a_t, Rot_b)
+    var C: Mat22 = mat_mul(rot_a_t, rot_b)
     var abs_C: Mat22 = abs(C)
     var abs_C_t: Mat22 = abs_C.transpose()
 
@@ -179,7 +179,7 @@ fn collide(
     # Find best axis
     var axis = Axis.FACE_A_X
     var separation = face_a.x
-    var normal = Rot_a.col1 if d_a.x > 0.0 else -Rot_a.col1
+    var normal = rot_a.col1 if d_a.x > 0.0 else -rot_a.col1
 
     alias relative_to_l: Float32 = 0.95
     alias absolute_to_l: Float32 = 0.01
@@ -187,17 +187,17 @@ fn collide(
     if face_a.y > relative_to_l * separation + absolute_to_l * h_a.y:
         axis = Axis.FACE_A_Y
         separation = face_a.y
-        normal = Rot_a.col2 if d_a.y > 0.0 else -Rot_a.col2
+        normal = rot_a.col2 if d_a.y > 0.0 else -rot_a.col2
 
     if face_b.x > relative_to_l * separation + absolute_to_l * h_b.x:
         axis = Axis.FACE_B_X
         separation = face_b.x
-        normal = Rot_b.col1 if d_b.x > 0.0 else -Rot_b.col1
+        normal = rot_b.col1 if d_b.x > 0.0 else -rot_b.col1
 
     if face_b.y > relative_to_l * separation + absolute_to_l * h_b.y:
         axis = Axis.FACE_B_Y
         separation = face_b.y
-        normal = Rot_b.col2 if d_b.y > 0.0 else -Rot_b.col2
+        normal = rot_b.col2 if d_b.y > 0.0 else -rot_b.col2
 
     var front_normal: Vec2
     var side_normal: Vec2
@@ -212,47 +212,47 @@ fn collide(
     if axis == Axis.FACE_A_X:
         front_normal = normal
         front = dot(pos_a, front_normal) + h_a.x
-        side_normal = Rot_a.col2
+        side_normal = rot_a.col2
         var side: Float32 = dot(pos_a, side_normal)
         neg_side = -side + h_a.y
         pos_side = side + h_a.y
         neg_edge = EdgeNumbers.EDGE3
         pos_edge = EdgeNumbers.EDGE1
-        compute_incident_edge(incident_edge, h_b, pos_b, Rot_b, front_normal)
+        compute_incident_edge(incident_edge, h_b, pos_b, rot_b, front_normal)
     
     elif axis == Axis.FACE_A_Y:
         front_normal = normal
         front = dot(pos_a, front_normal) + h_a.y
-        side_normal = Rot_a.col1
+        side_normal = rot_a.col1
         var side: Float32 = dot(pos_a, side_normal)
         neg_side = -side + h_a.x
         pos_side = side + h_a.x
         neg_edge = EdgeNumbers.EDGE2
         pos_edge = EdgeNumbers.EDGE4
-        compute_incident_edge(incident_edge, h_b, pos_b, Rot_b, front_normal)
+        compute_incident_edge(incident_edge, h_b, pos_b, rot_b, front_normal)
 
     elif axis == Axis.FACE_B_X:
         front_normal = -normal
         front = dot(pos_b, front_normal) + h_b.x
-        side_normal = Rot_b.col2
+        side_normal = rot_b.col2
         var side: Float32 = dot(pos_b, side_normal)
         neg_side = -side + h_b.y
         pos_side = side + h_b.y
         neg_edge = EdgeNumbers.EDGE3
         pos_edge = EdgeNumbers.EDGE1
-        compute_incident_edge(incident_edge, h_a, pos_a, Rot_a, front_normal)
+        compute_incident_edge(incident_edge, h_a, pos_a, rot_a, front_normal)
 
     # elif axis == Axis.FACE_B_Y:
     else:
         front_normal = -normal
         front = dot(pos_b, front_normal) + h_b.y
-        side_normal = Rot_b.col1
+        side_normal = rot_b.col1
         var side: Float32 = dot(pos_b, side_normal)
         neg_side = -side + h_b.x
         pos_side = side + h_b.x
         neg_edge = EdgeNumbers.EDGE2
         pos_edge = EdgeNumbers.EDGE4
-        compute_incident_edge(incident_edge, h_a, pos_a, Rot_a, front_normal)
+        compute_incident_edge(incident_edge, h_a, pos_a, rot_a, front_normal)
 
     # clip other face with 5 box planes (1 face plane, 4 edge planes)
     var clip_points1 = InlineArray[ClipVertex, 2](ClipVertex())
@@ -274,6 +274,7 @@ fn collide(
 	# Now clipPoints2 contains the clipping points.
 	# Due to roundoff, it is possible that clipping removes all points.
     var num_contacts = 0
+    @parameter
     for i in range(2):
         var separation: Float32 = dot(front_normal, clip_points2[i].v) - front
 
