@@ -6,6 +6,7 @@
   <p align="center">
     A 2D physics engine built in mojo. 🔥
   </p>
+  ![pendulum gif](https://github.com/RyanLeber/fire-physics-engine/blob/main/assets/pendulum.gif)
 </div>
 
 # Overview
