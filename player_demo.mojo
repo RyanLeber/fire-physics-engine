@@ -41,7 +41,7 @@ fn main() raises:
 
     seed()
 
-    var demo_strings = InlineArray[StringLiteral, 9](
+    var demo_strings = InlineArray[StringLiteral, 10](
         "Demo 0: Platform",
         "Demo 1: A Single Box",
         "Demo 2: Simple Pendulum",
@@ -397,6 +397,61 @@ fn main() raises:
         num_joints = j
 
 
+    # MARK: demo_9, A multi-pendulum
+    @parameter
+    fn demo_9():
+        var b = 0
+        bodies[b].set(Vec2(100.0, 20.0), INF)
+        bodies[b].friction = 0.2
+        bodies[b].position = Vec2(0.0, -0.5 * bodies[b].width.y)
+        bodies[b].rotation = 0.0
+        var b1 = Reference(bodies[b])
+        world.add(b1)
+        b += 1
+
+        var mass = 10.0
+
+        # Tuning
+        var frequencyHz = 4.0
+        var dampingRatio = 0.7
+
+        # frequency in radians
+        var omega = 2.0 * K_PI * frequencyHz
+
+        # damping coefficient
+        var d = 2.0 * mass * dampingRatio * omega
+
+        # spring stiffness
+        var k = mass * omega * omega
+
+        # magic formulas
+        var softness = 1.0 / (d + time_step * k)
+        var bias_factor = time_step * k / (d + time_step * k)
+
+        alias y: Float32 = 12.0
+
+        var j = 0
+        for i in range(15):
+            var x = Vec2(0.5 + i, y)
+            bodies[b].set(Vec2(0.75, 0.25), mass)
+            bodies[b].friction = 0.2
+            bodies[b].position = x
+            bodies[b].rotation = 0.0
+            world.add(bodies[b])
+
+            joints[j].set(b1, bodies[b], Vec2(i, y))
+            joints[j].softness = softness
+            joints[j].bias_factor = bias_factor
+            world.add(joints[j])
+
+            b1 = Reference(bodies[b])
+            b += 1
+            j += 1
+
+        num_bodies = b
+        num_joints = j
+
+
     @parameter
     # MARK: set_player_body
     fn set_player_body():
@@ -435,7 +490,7 @@ fn main() raises:
         if idx == 6: demo_6()
         if idx == 7: demo_7()
         if idx == 8: demo_8()
-        # if idx == 9: demo_9()
+        if idx == 9: demo_9()
 
         set_player_body()
 
