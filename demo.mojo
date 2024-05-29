@@ -1,6 +1,5 @@
 
 from random import random_float64, seed, random_si64
-from time import now
 
 from utils import InlineArray
 from collections import Optional, Set, Dict
@@ -30,7 +29,7 @@ alias SCREENWIDTH: Int = 1280
 alias SCREENHEIGHT: Int = 720
 alias FPS = 170
 alias iterations: Int = 10
-alias gravity: Vec2 = Vec2(0.0, -10.0)
+alias gravity= Vec2(0.0, -10.0)
 
 alias K_PI: Float32 = 3.14159265358979323846264
 alias INF = Float32.MAX
@@ -62,15 +61,15 @@ fn main() raises:
     var raylib = RayLib()
 
     var bodies = InlineArray[Body, 200](Body())
-    var joints = InlineArray[Joint, 100](Joint())
-    var bomb = UnsafePointer[Body].get_null()
-
+    alias bodies_life = __lifetime_of(bodies)
+    var joints = InlineArray[Joint[__lifetime_of(bodies)], 100](Joint[__lifetime_of(bodies)]())
+    var bomb = Optional[Reference[Body, True, __lifetime_of(bodies)]]()
     var num_bodies: Int = 0
     var num_joints: Int = 0
     var demo_index: Int = 0
     var time_step: Float32 = 1.0 / 60.0
 
-    var world = World(gravity, iterations) 
+    var world = World[gravity, iterations, __lifetime_of(bodies), __lifetime_of(joints)]() 
 
     # MARK: Platform
     @parameter
@@ -78,7 +77,7 @@ fn main() raises:
         # Set the first box
         bodies[0].set(Vec2(100.0, 20.0), INF)
         bodies[0].position = Vec2(0.0, -0.5 * bodies[0].width.y)
-        world.add(Reference(bodies[0]))
+        world.add(bodies[0])
         num_bodies += 1
 
 
@@ -88,13 +87,13 @@ fn main() raises:
         # Set the first box
         bodies[0].set(Vec2(100.0, 20.0), INF)
         bodies[0].position = Vec2(0.0, -0.5 * bodies[0].width.y)
-        world.add(Reference(bodies[0]))
+        world.add(bodies[0])
         num_bodies += 1
 
         # Set the second box
         bodies[1].set(Vec2(1.0, 1.0), 200.0)
         bodies[1].position = Vec2(0.0, 4.0)
-        world.add(Reference(bodies[1]))
+        world.add(bodies[1])
         num_bodies += 1
 
 
@@ -113,12 +112,12 @@ fn main() raises:
         bodies[1].friction = 0.2
         bodies[1].position = Vec2(9.0, 11.0)
         bodies[1].rotation = 0.0
-        world.add(Reference(bodies[1]))
+        world.add(bodies[1])
 
         num_bodies += 2
 
         joints[0].set(bodies[0], bodies[1], Vec2(0.0, 11.0))
-        world.add(Reference(joints[0]))
+        world.add(joints[0])
         num_joints += 1
 
 
@@ -128,35 +127,35 @@ fn main() raises:
         var b = 0
         bodies[b].set(Vec2(100.0, 20.0), INF)
         bodies[b].position = Vec2(0.0, -0.5 * bodies[b].width.y)
-        world.add(Reference(bodies[b]))
+        world.add(bodies[b])
         b += 1
 
         bodies[b].set(Vec2(13.0, 0.25), INF)
         bodies[b].position = Vec2(-2.0, 11.0)
         bodies[b].rotation = -0.25
-        world.add(Reference(bodies[b]))
+        world.add(bodies[b])
         b += 1
 
         bodies[b].set(Vec2(0.25, 1.0), INF)
         bodies[b].position = Vec2(5.25, 9.5)
-        world.add(Reference(bodies[b]))
+        world.add(bodies[b])
         b += 1
 
         bodies[b].set(Vec2(13.0, 0.25), INF)
         bodies[b].position = Vec2(2.0, 7.0)
         bodies[b].rotation = 0.25
-        world.add(Reference(bodies[b]))
+        world.add(bodies[b])
         b += 1
 
         bodies[b].set(Vec2(0.25, 1.0), INF)
         bodies[b].position = Vec2(-5.25, 5.5)
-        world.add(Reference(bodies[b]))
+        world.add(bodies[b])
         b += 1
 
         bodies[b].set(Vec2(13.0, 0.25), INF)
         bodies[b].position = Vec2(-2.0, 3.0)
         bodies[b].rotation = -0.25
-        world.add(Reference(bodies[b]))
+        world.add(bodies[b])
         b += 1
 
         var friction = InlineArray[Float32, 5](0.75, 0.5, 0.35, 0.1, 0.0)
@@ -164,7 +163,7 @@ fn main() raises:
             bodies[b].set(Vec2(0.5, 0.5), 25.0)
             bodies[b].friction = friction[i]
             bodies[b].position = Vec2(-7.5 + 2.0 * i, 16.0)
-            world.add(Reference(bodies[b]))
+            world.add(bodies[b])
             b += 1
 
         num_bodies = b
@@ -179,7 +178,7 @@ fn main() raises:
         bodies[b].friction = 0.2
         bodies[b].position = Vec2(0.0, -0.5 * bodies[b].width.y)
         bodies[b].rotation = 0.0
-        world.add(Reference(bodies[b]))
+        world.add(bodies[b])
         b += 1
 
         for i in range(10):
@@ -187,7 +186,7 @@ fn main() raises:
             bodies[b].friction = 0.2
             var x = random_float64(-0.1, 0.1)
             bodies[b].position = Vec2(x, 0.51 + 1.05 * i)
-            world.add(Reference(bodies[b]))
+            world.add(bodies[b])
             b += 1
 
         num_bodies = b
@@ -201,7 +200,7 @@ fn main() raises:
         bodies[b].friction = 0.2
         bodies[b].position = Vec2(0.0, -0.5 * bodies[b].width.y)
         bodies[b].rotation = 0.0
-        world.add(Reference(bodies[b]))
+        world.add(bodies[b])
         b += 1
 
         var x = Vec2(-6.0, 0.75)
@@ -214,12 +213,11 @@ fn main() raises:
                 bodies[b].set(Vec2(1.0, 1.0), 10.0)
                 bodies[b].friction = 0.2
                 bodies[b].position = y
-                world.add(Reference(bodies[b]))
+                world.add(bodies[b])
                 b += 1
 
                 y += Vec2(1.125, 0.0)
 
-            # x += Vec2(0.5625, 1.125)
             x += Vec2(0.5625, 2.0)
 
         num_bodies = b
@@ -231,27 +229,27 @@ fn main() raises:
         var b= 0
         bodies[b].set(Vec2(100.0, 20.0), INF)
         bodies[b].position = Vec2(0.0, -0.5 * bodies[b].width.y)
-        world.add(Reference(bodies[b]))
+        world.add(bodies[b])
         b += 1
 
         bodies[b].set(Vec2(12.0, 0.25), 100.0)
         bodies[b].position = Vec2(0.0, 1.0)
-        world.add(Reference(bodies[b]))
+        world.add(bodies[b])
         b += 1
 
         bodies[b].set(Vec2(0.5, 0.5), 25.0)
         bodies[b].position = Vec2(-5.0, 2.0)
-        world.add(Reference(bodies[b]))
+        world.add(bodies[b])
         b += 1
 
         bodies[b].set(Vec2(0.5, 0.5), 25.0)
         bodies[b].position = Vec2(-5.5, 2.0)
-        world.add(Reference(bodies[b]))
+        world.add(bodies[b])
         b += 1
 
         bodies[b].set(Vec2(1.0, 1.0), 100.0)
         bodies[b].position = Vec2(5.5, 15.0)
-        world.add(Reference(bodies[b]))
+        world.add(bodies[b])
         b += 1
 
         num_bodies = b
@@ -270,7 +268,7 @@ fn main() raises:
         bodies[b].friction = 0.2
         bodies[b].position = Vec2(0.0, -0.5 * bodies[b].width.y)
         bodies[b].rotation = 0.0
-        world.add(Reference(bodies[b]))
+        world.add(bodies[b])
         b += 1
 
         var num_planks: Int = 15
@@ -280,7 +278,7 @@ fn main() raises:
             bodies[b].set(Vec2(1.0, 0.25), mass)
             bodies[b].friction = 0.2
             bodies[b].position = Vec2(-8.5 + 1.25 * i, 5.0)
-            world.add(Reference(bodies[b]))
+            world.add(bodies[b])
             b += 1
 
         # Tuning
@@ -302,17 +300,16 @@ fn main() raises:
 
         var j: Int = 0
         for i in range(num_planks):
-            joints[j].set(Reference(bodies[i]), Reference(bodies[i+1]), Vec2(-9.125 + 1.25 * i, 5.0))
+            joints[j].set(bodies[i], bodies[i+1], Vec2(-9.125 + 1.25 * i, 5.0))
             joints[j].softness = softness
-            joints[j].biasFactor = bias_factor
-            world.add(Reference(joints[j]))
+            joints[j].bias_factor = bias_factor
+            world.add(joints[j])
             j += 1
 
-
-        joints[j].set(Reference(bodies[num_planks]), Reference(bodies[0]), Vec2(-9.125 + 1.25 * num_planks, 5.0))
+        joints[j].set(bodies[num_planks], bodies[0], Vec2(-9.125 + 1.25 * num_planks, 5.0))
         joints[j].softness = softness
-        joints[j].biasFactor = bias_factor
-        world.add(Reference(joints[j]))
+        joints[j].bias_factor = bias_factor
+        world.add(joints[j])
         j += 1
 
         num_bodies = b
@@ -331,20 +328,20 @@ fn main() raises:
 
         bodies[b].set(Vec2(12.0, 0.5), INF)
         bodies[b].position = Vec2(-1.5, 10.0)
-        world.add(Reference(bodies[b]))
+        world.add(bodies[b])
         b += 1
 
         for i in range(10):
             bodies[b].set(Vec2(0.2, 2.0), 10.0)
             bodies[b].position = Vec2(-6.0 + 1.0 * i, 11.125)
             bodies[b].friction = 0.1
-            world.add(Reference(bodies[b]))
+            world.add(bodies[b])
             b += 1
 
         bodies[b].set(Vec2(14.0, 0.5), INF)
         bodies[b].position = Vec2(1.0, 6.0)
         bodies[b].rotation = 0.3
-        world.add(Reference(bodies[b]))
+        world.add(bodies[b])
         b += 1
 
         bodies[b].set(Vec2(0.5, 3.0), INF)
@@ -361,7 +358,7 @@ fn main() raises:
 
         var j = 0
         joints[j].set(b1, b3, Vec2(-2.0, 1.0))
-        world.add(Reference(joints[j]))
+        world.add(joints[j])
         j += 1
 
         bodies[b].set(Vec2(0.5, 0.5), 10.0)
@@ -371,7 +368,7 @@ fn main() raises:
         b += 1
 
         joints[j].set(b2, b4, Vec2(-7.0, 15.0))
-        world.add(Reference(joints[j]))
+        world.add(joints[j])
         j += 1
 
         bodies[b].set(Vec2(2.0, 2.0), 20.0)
@@ -382,7 +379,7 @@ fn main() raises:
         b += 1
 
         joints[j].set(b1, b5, Vec2(6.0, 2.6))
-        world.add(Reference(joints[j]))
+        world.add(joints[j])
         j += 1
 
         bodies[b].set(Vec2(2.0, 0.2), 10.0)
@@ -392,7 +389,7 @@ fn main() raises:
         b += 1
 
         joints[j].set(b5, b6, Vec2(7.0, 3.5))
-        world.add(Reference(joints[j]))
+        world.add(joints[j])
         j += 1
 
         num_bodies = b
@@ -410,7 +407,7 @@ fn main() raises:
 
         num_bodies = 0
         num_joints = 0
-        bomb = UnsafePointer[Body].get_null()
+        bomb = None
 
         demo_index = idx
 
@@ -430,16 +427,16 @@ fn main() raises:
     @parameter
     fn launch_bomb():
         if not bomb:
-            bomb = UnsafePointer.address_of(bodies[num_bodies])
-            bomb[].set(Vec2(1.0, 1.0), 50.0)
-            bomb[].friction = 0.2
-            world.add(bomb)
+            bomb = Reference(bodies[num_bodies])
+            bomb.value()[][].set(Vec2(1.0, 1.0), 50.0)
+            bomb.value()[][].friction = 0.2
+            world.add(bomb.value()[])
             num_bodies += 1
 
-        bomb[].position = Vec2(random_float64(-15.0, 15.0), 15.0)
-        bomb[].rotation = random_float64(-1.5, 1.5)
-        bomb[].velocity = bomb[].position * -1.5
-        bomb[].angularVelocity = random_float64(-20.0, 20.0)
+        bomb.value()[][].position = Vec2(random_float64(-15.0, 15.0), 15.0)
+        bomb.value()[][].rotation = random_float64(-1.5, 1.5)
+        bomb.value()[][].velocity = bomb.value()[][].position * -1.5
+        bomb.value()[][].angular_velocity = random_float64(-20.0, 20.0)
 
 
     # MARK: draw_body
@@ -458,10 +455,14 @@ fn main() raises:
 
         raylib.rl_begin(DrawModes.RL_LINES)
         # Choose color based on body
-        if UnsafePointer.address_of(body) == bomb:
-            raylib.rl_color_4ub(102, 229, 102, 255)
+        if bomb:
+            if UnsafePointer.address_of(body) == UnsafePointer.address_of(bomb.value()[]):
+                raylib.rl_color_4ub(102, 229, 102, 255)
+            else:
+                raylib.rl_color_4ub(204, 204, 229, 255)
         else:
             raylib.rl_color_4ub(204, 204, 229, 255)
+            
 
         raylib.rl_vertex_2f(v2.x, v2.y)
         raylib.rl_vertex_2f(v1.x, v1.y)
@@ -480,21 +481,21 @@ fn main() raises:
 
     # MARK: draw_joint
     @parameter
-    fn draw_joint(joint: Reference[Joint, _, _]):
+    fn draw_joint(joint: Reference[Joint[__lifetime_of(bodies)], _, _]):
         # Extract body data
         var b1 = joint[].body1
         var b2 = joint[].body2
 
         # Calculate rotation matrices
-        var R1 = Mat22(b1[].rotation)
-        var R2 = Mat22(b2[].rotation)
+        var R1 = Mat22(b1.value()[][].rotation)
+        var R2 = Mat22(b2.value()[][].rotation)
 
         # Calculate positions
-        var x1 = b1[].position
-        var p1 = x1 + R1 * joint[].localAnchor1
+        var x1 = b1.value()[][].position
+        var p1 = x1 + R1 * joint[].local_anchor1
 
-        var x2 = b2[].position
-        var p2 = x2 + R2 * joint[].localAnchor2
+        var x2 = b2.value()[][].position
+        var p2 = x2 + R2 * joint[].local_anchor2
 
         raylib.rl_color_4ub(102, 229, 102, 255)
         raylib.rl_begin(DrawModes.RL_LINES)
@@ -580,12 +581,7 @@ fn main() raises:
         var i = 1
         init_demo(i)
 
-        alias multiplyer = 1000 / 1024
-
         while not raylib.window_should_close():
-
-            # var start = now()
-
             raylib.begin_drawing()
             raylib.clear_background(Reference(black))
             raylib.begin_mode_2d(Reference(camera))
@@ -595,12 +591,10 @@ fn main() raises:
 
             # Draw bodies and joints
             for i in range(num_bodies):
-                # if len(world.arbiters) == 0 and bodies[i].mass != INF:
-                #     print("bodies[", i, "].velocity:", bodies[i].velocity)
-                draw_body(Reference(bodies[i]))
+                draw_body(bodies[i])
 
             for j in range(num_joints): 
-                draw_joint(Reference(joints[j]))
+                draw_joint(joints[j])
 
             # draw contact points
             for item in world.arbiters.items():
@@ -609,24 +603,14 @@ fn main() raises:
                     raylib.draw_circle_v(Reference(p), 0.08, Reference(red))
 
             raylib.end_mode_2d()
-
-            # raylib.draw_fps(SCREENWIDTH - 90, 10)
-
             raylib.end_drawing()
 
             handle_keyboard_events()
             draw_info_box()
-
-            # var dur = now() - start
-            # print("Time taken for this iteration:",  dur//1000, " microseconds")
-
 
 
         raylib.close_window()
 
     main_loop()
 
-    _ = bodies
-    _ = joints
     _ = world
-    _ = raylib

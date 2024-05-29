@@ -39,16 +39,16 @@ struct FeaturePair(CollectionElement):
 
 @value
 struct Edges(CollectionElement):
-    var inEdge1: UInt8
-    var outEdge1: UInt8
-    var inEdge2: UInt8
-    var outEdge2: UInt8
+    var in_edge1: UInt8
+    var out_edge1: UInt8
+    var in_edge2: UInt8
+    var out_edge2: UInt8
 
     fn __init__(inout self):
-        self.inEdge1 = 0
-        self.outEdge1 = 0
-        self.inEdge2 = 0
-        self.outEdge2 = 0
+        self.in_edge1 = 0
+        self.out_edge1 = 0
+        self.in_edge2 = 0
+        self.out_edge2 = 0
 
 
 @value
@@ -61,8 +61,8 @@ struct Contact(CollectionElement):
     var Pn: Float32
     var Pt: Float32
     var Pnb: Float32
-    var massNormal: Float32
-    var massTangent: Float32
+    var mass_normal: Float32
+    var mass_tangent: Float32
     var bias: Float32
     var feature: FeaturePair
 
@@ -75,8 +75,8 @@ struct Contact(CollectionElement):
         self.Pn = 0.0
         self.Pt = 0.0
         self.Pnb = 0.0
-        self.massNormal = 0.0
-        self.massTangent = 0.0
+        self.mass_normal = 0.0
+        self.mass_tangent = 0.0
         self.bias = 0.0
         self.feature = FeaturePair()
     
@@ -90,26 +90,28 @@ struct Contact(CollectionElement):
             "\n Pn:          " + str(self.Pn) +
             "\n Pt:          " + str(self.Pt) +
             "\n Pnb:         " + str(self.Pnb) +
-            "\n massNormal:  " + str(self.massNormal) +
-            "\n massTanget:  " + str(self.massTangent) +
+            "\n mass_normal:  " + str(self.mass_normal) +
+            "\n massTanget:  " + str(self.mass_tangent) +
             "\n bias:        " + str(self.bias) +
             "\n featurePair: " + str(self.feature)
         )
 
 
 @value
-struct Arbiter(CollectionElement):
+struct Arbiter[lifetime: MutableLifetime](CollectionElement):
     alias MAX_POINTS = 2
     alias array_type = InlineArray[Contact, Self.MAX_POINTS]
     var contacts: Self.array_type
     var num_contacts: Int32
     var friction: Float32
 
-    var b1: UnsafePointer[Body]
-    var b2: UnsafePointer[Body]
+    var b1: Reference[Body, True, lifetime]
+    var b2: Reference[Body, True, lifetime]
 
-    fn __init__(inout self, b1: UnsafePointer[Body], b2: UnsafePointer[Body]):
-        if b1 < b2:
+    fn __init__(inout self, b1: Reference[Body, True, lifetime], b2: Reference[Body, True, lifetime]):
+        var b1_ptr = UnsafePointer.address_of(b1)
+        var b2_ptr = UnsafePointer.address_of(b2)
+        if b1_ptr < b2_ptr:
             self.b1 = b1
             self.b2 = b2
         else:
@@ -179,17 +181,17 @@ struct Arbiter(CollectionElement):
             # Precompute normal mass, tangent mass, and bias.
             var rn1: Float32 = dot(r1, c[].normal)
             var rn2: Float32 = dot(r2, c[].normal)
-            var kNormal: Float32 = b1[].invMass + b2[].invMass
+            var kNormal: Float32 = b1[].inv_mass + b2[].inv_mass
 
-            kNormal += b1[].invI * (dot(r1, r1) - rn1 * rn1) + b2[].invI * (dot(r2, r2) - rn2 * rn2)
-            c[].massNormal = 1.0 / kNormal
+            kNormal += b1[].inv_i * (dot(r1, r1) - rn1 * rn1) + b2[].inv_i * (dot(r2, r2) - rn2 * rn2)
+            c[].mass_normal = 1.0 / kNormal
 
             var tangent: Vec2 = cross(c[].normal, 1.0)
             var rt1: Float32 = dot(r1, tangent)
             var rt2: Float32 = dot(r2, tangent)
-            var kTangent: Float32 = self.b1[].invMass + self.b2[].invMass
-            kTangent += b1[].invI * (dot(r1, r1) - rt1 * rt1) + b2[].invI * (dot(r2, r2) - rt2 * rt2)
-            c[].massTangent = 1.0 / kTangent
+            var kTangent: Float32 = self.b1[].inv_mass + self.b2[].inv_mass
+            kTangent += b1[].inv_i * (dot(r1, r1) - rt1 * rt1) + b2[].inv_i * (dot(r2, r2) - rt2 * rt2)
+            c[].mass_tangent = 1.0 / kTangent
 
             c[].bias = -k_biasFactor * inv_dt * min[DType.float32](0.0, c[].separation + k_allowedPenetration)
 
@@ -197,11 +199,11 @@ struct Arbiter(CollectionElement):
                 # Apply normal + friction impulse
                 var P: Vec2 = (c[].normal * c[].Pn) + (tangent * c[].Pt)
 
-                b1[].velocity -= P * b1[].invMass
-                b1[].angularVelocity -= b1[].invI * cross(r1, P)
+                b1[].velocity -= P * b1[].inv_mass
+                b1[].angular_velocity -= b1[].inv_i * cross(r1, P)
 
-                b2[].velocity += P * b2[].invMass
-                b2[].angularVelocity += b2[].invI * cross(r2, P)
+                b2[].velocity += P * b2[].inv_mass
+                b2[].angular_velocity += b2[].inv_i * cross(r2, P)
 
 
     fn apply_impulse(inout self, accumulate_impulses: Bool):
@@ -213,11 +215,11 @@ struct Arbiter(CollectionElement):
             c[].r2 = c[].position - b2[].position
 
             # Relative velocity at contact
-            var dv = b2[].velocity + cross(b2[].angularVelocity, c[].r2) - b1[].velocity - cross(b1[].angularVelocity, c[].r1)
+            var dv = b2[].velocity + cross(b2[].angular_velocity, c[].r2) - b1[].velocity - cross(b1[].angular_velocity, c[].r1)
 
             # Compute normal impulse
             var vn: Float32 = dot(dv, c[].normal)
-            var dPn: Float32 = c[].massNormal * (-vn + c[].bias)
+            var dPn: Float32 = c[].mass_normal * (-vn + c[].bias)
 
             if accumulate_impulses:
                 # Clamp the accumulated impulse
@@ -230,18 +232,18 @@ struct Arbiter(CollectionElement):
             # Apply contact impulse
             var Pn: Vec2 = c[].normal * dPn
 
-            b1[].velocity -= Pn * b1[].invMass
-            b1[].angularVelocity -= b1[].invI * cross(c[].r1, Pn)
+            b1[].velocity -= Pn * b1[].inv_mass
+            b1[].angular_velocity -= b1[].inv_i * cross(c[].r1, Pn)
 
-            b2[].velocity += Pn * b2[].invMass
-            b2[].angularVelocity += b2[].invI * cross(c[].r2, Pn)
+            b2[].velocity += Pn * b2[].inv_mass
+            b2[].angular_velocity += b2[].inv_i * cross(c[].r2, Pn)
 
             # Relative velocity at contact
-            dv = b2[].velocity + cross(b2[].angularVelocity, c[].r2) - b1[].velocity - cross(b1[].angularVelocity, c[].r1)
+            dv = b2[].velocity + cross(b2[].angular_velocity, c[].r2) - b1[].velocity - cross(b1[].angular_velocity, c[].r1)
 
             var tangent: Vec2 = cross(c[].normal, 1.0)
             var vt: Float32 = dot(dv, tangent)
-            var dPt = c[].massTangent * (-vt)
+            var dPt = c[].mass_tangent * (-vt)
 
             if accumulate_impulses:
                 # Compute friction impulse
@@ -258,11 +260,11 @@ struct Arbiter(CollectionElement):
             # Apply contact impulse
             var Pt: Vec2 = tangent * dPt
 
-            b1[].velocity -= Pt * b1[].invMass
-            b1[].angularVelocity -= b1[].invI * cross(c[].r1, Pt)
+            b1[].velocity -= Pt * b1[].inv_mass
+            b1[].angular_velocity -= b1[].inv_i * cross(c[].r1, Pt)
 
-            b2[].velocity += Pt * b2[].invMass
-            b2[].angularVelocity += b2[].invI * cross(c[].r2, Pt)
+            b2[].velocity += Pt * b2[].inv_mass
+            b2[].angular_velocity += b2[].inv_i * cross(c[].r2, Pt)
 
 
     fn __str__(self) -> String:
@@ -271,6 +273,6 @@ struct Arbiter(CollectionElement):
             "\n numContacts: " + str(self.num_contacts) +
             "\n contact1:\n" + str(self.contacts[0]) +
             "\n contact2:\n" + str(self.contacts[1]) +
-            "\n  body1: " + str(self.b1)+ "\n" + str(self.b1[]) +
-            "\n  body2: " + str(self.b2)+ "\n" + str(self.b2[]) 
+            "\n  body1: " + str(UnsafePointer.address_of(self.b1[]))+ "\n" + str(self.b1[]) +
+            "\n  body2: " + str(UnsafePointer.address_of(self.b2[]))+ "\n" + str(self.b2[]) 
         )
