@@ -61,7 +61,6 @@ fn main() raises:
     var raylib = RayLib()
 
     var bodies = InlineArray[Body, 200](Body())
-    alias bodies_life = __lifetime_of(bodies)
     var joints = InlineArray[Joint[__lifetime_of(bodies)], 100](Joint[__lifetime_of(bodies)]())
     var player = Optional[Reference[Body, True, __lifetime_of(bodies)]]()
 
@@ -414,7 +413,7 @@ fn main() raises:
 
     # MARK: init_demo
     @parameter
-    fn init_demo(idx: Int) raises:
+    fn init_demo(idx: Int):
         world.clear()
         for i in range(num_bodies):
             bodies[i].reset()
@@ -512,7 +511,7 @@ fn main() raises:
 
     # MARK: keyboard_events
     @parameter
-    fn handle_keyboard_events() raises -> None:
+    fn handle_keyboard_events():
         var num_keys = Set[Int](
                 Keyboard.KEY_ZERO,
                 Keyboard.KEY_ONE,

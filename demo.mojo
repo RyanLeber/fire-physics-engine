@@ -398,7 +398,7 @@ fn main() raises:
 
     # MARK: init_demo
     @parameter
-    fn init_demo(idx: Int) raises:
+    fn init_demo(idx: Int):
         world.clear()
         for i in range(num_bodies):
             bodies[i].reset()
@@ -510,7 +510,7 @@ fn main() raises:
 
     # MARK: keyboard_events
     @parameter
-    fn handle_keyboard_events() raises -> None:
+    fn handle_keyboard_events():
         var num_keys = Set[Int](
                 Keyboard.KEY_ZERO,
                 Keyboard.KEY_ONE,
@@ -543,7 +543,6 @@ fn main() raises:
 
         elif key == Keyboard.KEY_SPACE:
             launch_bomb()
-            return
 
 
     # MARK: draw_info_box
@@ -608,9 +607,8 @@ fn main() raises:
             handle_keyboard_events()
             draw_info_box()
 
-
         raylib.close_window()
 
-    main_loop()
 
+    main_loop()
     _ = world
