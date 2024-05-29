@@ -2,8 +2,6 @@ from math import rsqrt, cos, sin
 from testing import assert_not_equal
 from random import random_float64
 
-alias K_PI = 3.14159265358979323846264
-
 @register_passable
 struct Vec2(Absable):
     var data: SIMD[DType.float32, 2]
