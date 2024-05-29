@@ -40,7 +40,7 @@ struct DJBX33A_Hasher[custom_secret: UInt64 = 0]:
         """The algorithm is not optimal."""
         alias size_in_bytes = size * dt.sizeof()
         var bytes = bitcast[DType.uint8, size_in_bytes](value)
-        # @unroll
+        @parameter
         for i in range(size_in_bytes):
             self.hash_data = self.hash_data * 33 + bytes[i].cast[DType.uint64]()
 
