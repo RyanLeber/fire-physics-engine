@@ -2,6 +2,10 @@
 from sys.ffi import DLHandle, external_call
 
 
+alias RAYLIB_PATH = '/usr/local/lib/libraylib.so'
+alias RAYLIB_EXTERNAL_BINDINGS_PATH = '/home/ryan/mojo-projects/fire-physics-engine/raylib_bindings/lib/libraylib_bindings.so'
+
+
 struct DrawModes:
     """Primitive assembly draw modes.
 
@@ -562,10 +566,6 @@ alias c_raylib_DrawText_ptr = fn(text: DTypePointer[DType.int8], pos_x: Int32, p
 # Module: rlglfw, low level rendering functions
 alias c_raylib_GetShapesTexture = fn() -> UnsafePointer[Texture2D]
 alias c_raylib_GetShapesTextureRectangle = fn() -> UnsafePointer[Rectangle]
-
-
-alias RAYLIB_PATH = '/usr/local/lib/libraylib.so'
-alias RAYLIB_EXTERNAL_BINDINGS_PATH = '/home/ryan/mojo-projects/fire-physics-engine/raylib_bindings/lib/libraylib_bindings.so'
 
 # MARK: RayLib
 @value
