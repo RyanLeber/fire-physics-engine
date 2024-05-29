@@ -407,7 +407,7 @@ fn main() raises:
             world.add(player.value()[])
             num_bodies += 1
 
-        player.value()[][].position = Vec2(4, 10.0)
+        player.value()[][].position = Vec2(4, 15.0)
         player.value()[][].velocity = player.value()[][].position * 0
 
 
@@ -549,16 +549,11 @@ fn main() raises:
         var font_size = 20
         var x = 20
 
-        var a = "(A)ccumulation: YES" if world.accumulate_impulses else "(A)ccumulation: NO"
-        var p = "(P)osition Correction: YES" if world.position_correction else "(P)osition Correction: NO"
-        var w = "(W)arm Starting: YES" if world.warm_starting else "(W)arm Starting: NO"
-
-        raylib.draw_rectangle_lines( 10, 10, 420, 170, Reference(boarder))
+        raylib.draw_rectangle_lines( 10, 10, 420, 140, Reference(boarder))
         raylib.draw_text(demo_strings[demo_index].unsafe_ptr(), x, 20, font_size, Reference(light_red))
-        raylib.draw_text("Keys: 1-9 Demos, Space to Launch Bomb".unsafe_ptr(), x, 50, font_size, Reference(light_red))
-        raylib.draw_text(a.unsafe_ptr(), x, 80, font_size, Reference(light_red))
-        raylib.draw_text(p.unsafe_ptr(), x, 110, font_size, Reference(light_red))
-        raylib.draw_text(w.unsafe_ptr(), x, 140, font_size, Reference(light_red))
+        raylib.draw_text("Keys: 1-9 Demos,".unsafe_ptr(), x, 50, font_size, Reference(light_red))
+        raylib.draw_text("Use A to move left, D to move right".unsafe_ptr(), x, 80, font_size, Reference(light_red))
+        raylib.draw_text("Press Space to jump".unsafe_ptr(), x, 110, font_size, Reference(light_red))
 
 
     # MARK: main_loop
