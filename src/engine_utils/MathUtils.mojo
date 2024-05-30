@@ -88,7 +88,7 @@ struct Vec2(Absable):
         return abs(self.data)
 
     fn __str__(self) -> String:
-        return String(self.data)
+        return str(self.data)
 
     @always_inline
     fn normalize(self) -> Vec2:
