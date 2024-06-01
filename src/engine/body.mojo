@@ -88,14 +88,18 @@ struct Body(CollectionElement):
     fn add_force(inout self, force: Vec2):
         self.force += force
 
-    fn set(inout self, width: Vec2, mass: Float32):
+    fn set(inout self, width: Vec2, mass: Float32, *, rotation: Bool=True):
         self.width = width
         self.mass = mass
 
-        if not isinf(mass):  # Checking if mass is not infinity
+        if not isinf(mass) and rotation:  # Checking if mass is not infinity
             self.inv_mass = 1.0 / mass
             self.I = mass * (width.x * width.x + width.y * width.y) / 12.0
             self.inv_i = 1.0 / self.I
+        elif not isinf(mass) and not rotation:
+            self.inv_mass = 1.0 / mass
+            self.I = INF
+            self.inv_i = 0.0
         else:
             self.inv_mass = 0.0
             self.I = INF
