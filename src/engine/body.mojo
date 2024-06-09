@@ -7,7 +7,7 @@ from src.engine_utils import Vec2
 alias INF = Float32.MAX
 
 @value
-struct Body(CollectionElement):
+struct Body(CollectionElementNew):
     """
     An object to define a Physics Body in 2D.\n
     Attributes:\n
@@ -52,6 +52,20 @@ struct Body(CollectionElement):
         self.inv_mass = 0.0
         self.I = INF
         self.inv_i = 0.0
+
+    fn __init__(inout self, *, copy: Self):
+        self.rotation = copy.rotation
+        self.velocity = copy.velocity
+        self.angular_velocity = copy.angular_velocity
+        self.force = copy.force
+        self.torque = copy.torque
+        self.friction = copy.friction
+        self.position = copy.position
+        self.width = copy.width
+        self.mass = copy.mass
+        self.inv_mass = copy.inv_mass
+        self.I = copy.I
+        self.inv_i = copy.inv_i
 
     fn reset(inout self):
         self.rotation = 0.0

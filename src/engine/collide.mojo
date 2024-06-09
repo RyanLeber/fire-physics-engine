@@ -41,13 +41,17 @@ struct EdgeNumbers:
 
 
 @value
-struct ClipVertex(CollectionElement):
+struct ClipVertex(CollectionElementNew):
     var v: Vec2
     var fp: FeaturePair
 
     fn __init__(inout self):
         self.v = Vec2(0, 0)  # Assuming Vec2 has a default constructor
         self.fp = FeaturePair()  # Assuming FeaturePair takes an integer in its constructor
+
+    fn __init__(inout self, *, copy: Self):
+        self.v = copy.v
+        self.fp = copy.fp
 
 
 fn flip(inout fp: FeaturePair):

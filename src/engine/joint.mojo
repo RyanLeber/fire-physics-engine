@@ -13,7 +13,7 @@ from src.engine_utils import (
 
 
 @value
-struct Joint[lifetime: MutableLifetime](CollectionElement):
+struct Joint[lifetime: MutableLifetime](CollectionElementNew):
     """An object to define a Physics Joint in 2D.
 
     Attributes:
@@ -40,8 +40,8 @@ struct Joint[lifetime: MutableLifetime](CollectionElement):
     var P: Vec2
     var bias_factor: Float32
     var softness: Float32
-    var body1: Optional[Reference[Body, True, lifetime]]
-    var body2: Optional[Reference[Body, True, lifetime]]
+    var body1: Optional[Reference[Body, lifetime]]
+    var body2: Optional[Reference[Body, lifetime]]
 
 
     fn __init__(inout self):
@@ -58,6 +58,20 @@ struct Joint[lifetime: MutableLifetime](CollectionElement):
         self.body1 = None
         self.body2 = None
 
+    fn __init__(inout self, *, copy: Self):
+        self.M = copy.M
+        self.local_anchor1 = copy.local_anchor1
+        self.local_anchor2 = copy.local_anchor2
+        self.r1 = copy.r1
+        self.r2 = copy.r2
+        self.bias = copy.bias
+        self.P = copy.P
+        self.bias_factor = copy.bias_factor
+        self.softness = copy.softness
+
+        self.body1 = copy.body1
+        self.body2 = copy.body2
+
     fn reset(inout self):
         self.M = Mat22(Vec2(0.0, 0.0),Vec2(0.0, 0.0))
         self.local_anchor1 = Vec2(0.0, 0.0)
@@ -72,7 +86,7 @@ struct Joint[lifetime: MutableLifetime](CollectionElement):
         self.body1 = None
         self.body2 = None
 
-    fn set(inout self, b1: Reference[Body, True, lifetime], b2: Reference[Body, True, lifetime], anchor: Vec2):
+    fn set(inout self, b1: Reference[Body, lifetime], b2: Reference[Body, lifetime], anchor: Vec2):
         self.body1 = b1
         self.body2 = b2
 
@@ -87,8 +101,8 @@ struct Joint[lifetime: MutableLifetime](CollectionElement):
         self.bias_factor = 0.2
 
     fn pre_step(inout self, inv_dt: Float32, world_warm_start: Bool, world_pos_cor: Bool):
-        var body1 = self.body1.value()[]
-        var body2 = self.body2.value()[]
+        var body1 = self.body1.value()
+        var body2 = self.body2.value()
 
         self.r1 = Mat22(body1[].rotation) * self.local_anchor1
         self.r2 = Mat22(body2[].rotation) * self.local_anchor2
@@ -143,8 +157,8 @@ struct Joint[lifetime: MutableLifetime](CollectionElement):
             self.P = Vec2(0.0, 0.0)
 
     fn apply_impulse(inout self):
-        var body1 = self.body1.value()[]
-        var body2 = self.body2.value()[]
+        var body1 = self.body1.value()
+        var body2 = self.body2.value()
         var dv = body2[].velocity + cross(body2[].angular_velocity, self.r2) - body1[].velocity - cross(body1[].angular_velocity, self.r1)
 
         var impulse = self.M * (self.bias - dv - self.P * self.softness)
@@ -168,6 +182,6 @@ struct Joint[lifetime: MutableLifetime](CollectionElement):
             "\n  P:          " + str(self.P) +
             "\n  bias_factor: " + str(self.bias_factor) +
             "\n  softness:   " + str(self.softness) +
-            "\n  body1: " + str(UnsafePointer.address_of(self.body1.value()[]))+ "\n" + str(self.body1.value()[][]) +
-            "\n  body2: " + str(UnsafePointer.address_of(self.body2.value()[]))+ "\n" + str(self.body2.value()[][]) 
+            "\n  body1: " + str(UnsafePointer.address_of(self.body1.value()[]))+ "\n" + str(self.body1.value()[]) +
+            "\n  body2: " + str(UnsafePointer.address_of(self.body2.value()[]))+ "\n" + str(self.body2.value()[]) 
         )

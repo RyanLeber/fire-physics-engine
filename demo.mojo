@@ -41,7 +41,7 @@ fn main() raises:
 
     seed()
 
-    var demo_strings = InlineArray[StringLiteral, 10](
+    var demo_strings = InlineArray[String, 10](
         "Demo 0: Platform",
         "Demo 1: A Single Box",
         "Demo 2: Simple Pendulum",
@@ -63,7 +63,7 @@ fn main() raises:
     var bodies = InlineArray[Body, 200](Body())
     var joints = InlineArray[Joint[__lifetime_of(bodies)], 100](Joint[__lifetime_of(bodies)]())
 
-    var bomb = Optional[Reference[Body, True, __lifetime_of(bodies)]]()
+    var bomb = Optional[Reference[Body, __lifetime_of(bodies)]]()
 
     var num_bodies: Int = 0
     var num_joints: Int = 0
@@ -484,24 +484,24 @@ fn main() raises:
     fn launch_bomb():
         if not bomb:
             bomb = Reference(bodies[num_bodies])
-            bomb.value()[][].set(Vec2(1.0, 1.0), 50.0)
-            bomb.value()[][].friction = 0.2
+            bomb.value()[].set(Vec2(1.0, 1.0), 50.0)
+            bomb.value()[].friction = 0.2
             world.add(bomb.value()[])
             num_bodies += 1
 
-        bomb.value()[][].position = Vec2(random_float64(-15.0, 15.0), 15.0)
-        bomb.value()[][].rotation = random_float64(-1.5, 1.5)
-        bomb.value()[][].velocity = bomb.value()[][].position * -1.5
-        bomb.value()[][].angular_velocity = random_float64(-20.0, 20.0)
-
+        bomb.value()[].position = Vec2(random_float64(-15.0, 15.0), 15.0)
+        bomb.value()[].rotation = random_float64(-1.5, 1.5)
+        bomb.value()[].velocity = bomb.value()[].position * -1.5
+        bomb.value()[].angular_velocity = random_float64(-20.0, 20.0)
 
     # MARK: draw_body
     @parameter
-    fn draw_body(body: Reference[Body, _, _]):
+    # fn draw_body(body: Reference[Body, _, _]):
+    fn draw_body(body: Body ):
         # Calculate rotation matrix
-        var R: Mat22 = Mat22(body[].rotation)
-        var x: Vec2 = body[].position
-        var h: Vec2 = body[].width * 0.5
+        var R: Mat22 = Mat22(body.rotation)
+        var x: Vec2 = body.position
+        var h: Vec2 = body.width * 0.5
 
         # Calculate vertices
         var v1 = x + R * Vec2(-h.x, -h.y)
@@ -537,21 +537,22 @@ fn main() raises:
 
     # MARK: draw_joint
     @parameter
-    fn draw_joint(joint: Reference[Joint[__lifetime_of(bodies)], _, _]):
+    # fn draw_joint(joint: Reference[Joint[__lifetime_of(bodies)], _, _]):
+    fn draw_joint(joint: Joint):
         # Extract body data
-        var b1 = joint[].body1
-        var b2 = joint[].body2
+        var b1 = joint.body1
+        var b2 = joint.body2
 
         # Calculate rotation matrices
-        var R1 = Mat22(b1.value()[][].rotation)
-        var R2 = Mat22(b2.value()[][].rotation)
+        var R1 = Mat22(b1.value()[].rotation)
+        var R2 = Mat22(b2.value()[].rotation)
 
         # Calculate positions
-        var x1 = b1.value()[][].position
-        var p1 = x1 + R1 * joint[].local_anchor1
+        var x1 = b1.value()[].position
+        var p1 = x1 + R1 * joint.local_anchor1
 
-        var x2 = b2.value()[][].position
-        var p2 = x2 + R2 * joint[].local_anchor2
+        var x2 = b2.value()[].position
+        var p2 = x2 + R2 * joint.local_anchor2
 
         raylib.rl_color_4ub(102, 229, 102, 255)
         raylib.rl_begin(DrawModes.RL_LINES)
@@ -612,12 +613,12 @@ fn main() raises:
         var p = "(P)osition Correction: YES" if world.position_correction else "(P)osition Correction: NO"
         var w = "(W)arm Starting: YES" if world.warm_starting else "(W)arm Starting: NO"
 
-        raylib.draw_rectangle_lines( 10, 10, 420, 170, Reference(boarder))
-        raylib.draw_text(demo_strings[demo_index].unsafe_ptr(), x, 20, font_size, Reference(light_red))
-        raylib.draw_text("Keys: 1-9 Demos, Space to Launch Bomb".unsafe_ptr(), x, 50, font_size, Reference(light_red))
-        raylib.draw_text(a.unsafe_ptr(), x, 80, font_size, Reference(light_red))
-        raylib.draw_text(p.unsafe_ptr(), x, 110, font_size, Reference(light_red))
-        raylib.draw_text(w.unsafe_ptr(), x, 140, font_size, Reference(light_red))
+        raylib.draw_rectangle_lines( 10, 10, 420, 170, UnsafePointer.address_of(boarder))
+        raylib.draw_text(demo_strings[demo_index].unsafe_cstr_ptr(), x, 20, font_size, UnsafePointer.address_of(light_red))
+        raylib.draw_text("Keys: 1-9 Demos, Space to Launch Bomb".unsafe_cstr_ptr(), x, 50, font_size, UnsafePointer.address_of(light_red))
+        raylib.draw_text(a.unsafe_cstr_ptr(), x, 80, font_size, UnsafePointer.address_of(light_red))
+        raylib.draw_text(p.unsafe_cstr_ptr(), x, 110, font_size, UnsafePointer.address_of(light_red))
+        raylib.draw_text(w.unsafe_cstr_ptr(), x, 140, font_size, UnsafePointer.address_of(light_red))
 
 
     # MARK: main_loop
@@ -638,8 +639,8 @@ fn main() raises:
 
         while not raylib.window_should_close():
             raylib.begin_drawing()
-            raylib.clear_background(Reference(black))
-            raylib.begin_mode_2d(Reference(camera))
+            raylib.clear_background(UnsafePointer.address_of(black))
+            raylib.begin_mode_2d(UnsafePointer.address_of(camera))
             
             # Update the world
             world.step(time_step)
@@ -655,7 +656,7 @@ fn main() raises:
             for item in world.arbiters.items():
                 for i in range(item[].value.num_contacts):
                     var p = item[].value.contacts[i].position
-                    raylib.draw_circle_v(Reference(p), 0.08, Reference(red))
+                    raylib.draw_circle_v(UnsafePointer.address_of(p), 0.08, UnsafePointer.address_of(red))
 
             raylib.end_mode_2d()
             raylib.end_drawing()

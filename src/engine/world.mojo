@@ -13,8 +13,8 @@ struct World[gravity: Vec2, iterations: Int, bodies_lifetime: MutableLifetime, j
     var accumulate_impulses: Bool
     var warm_starting: Bool
     var position_correction: Bool
-    var bodies: List[Reference[Body, True, bodies_lifetime]]
-    var joints: List[Reference[Joint[bodies_lifetime], True, joints_lifetime]]
+    var bodies: List[Reference[Body, bodies_lifetime]]
+    var joints: List[Reference[Joint[bodies_lifetime], joints_lifetime]]
     var arbiters: Dict[ArbiterKey, Arbiter[bodies_lifetime]]
 
     fn __init__(inout self):
@@ -22,15 +22,15 @@ struct World[gravity: Vec2, iterations: Int, bodies_lifetime: MutableLifetime, j
         self.warm_starting = True
         self.position_correction = True
 
-        self.bodies = List[Reference[Body, True, bodies_lifetime]]()
-        self.joints = List[Reference[Joint[bodies_lifetime], True, joints_lifetime]]()
+        self.bodies = List[Reference[Body, bodies_lifetime]]()
+        self.joints = List[Reference[Joint[bodies_lifetime], joints_lifetime]]()
 
         self.arbiters = Dict[ArbiterKey, Arbiter[bodies_lifetime]]()
 
-    fn add(inout self, body_ref: Reference[Body, True, bodies_lifetime]):
+    fn add(inout self, body_ref: Reference[Body, bodies_lifetime]):
         self.bodies.append(body_ref)
 
-    fn add(inout self, joint_ref: Reference[Joint[bodies_lifetime], True, joints_lifetime]):
+    fn add(inout self, joint_ref: Reference[Joint[bodies_lifetime], joints_lifetime]):
         self.joints.append(joint_ref)
 
     fn clear(inout self):
@@ -50,7 +50,7 @@ struct World[gravity: Vec2, iterations: Int, bodies_lifetime: MutableLifetime, j
 
                 if bi[].inv_mass == 0.0 and bj[].inv_mass == 0.0:
                     continue
-                var key = ArbiterKey(int(UnsafePointer.address_of(bi)), int(UnsafePointer.address_of(bj)))
+                var key = ArbiterKey(int(UnsafePointer[Body].address_of(bi[])), int(UnsafePointer[Body].address_of(bj[])))
                 var new_arb: Arbiter[bodies_lifetime] = Arbiter(bi, bj)
 
                 if new_arb.num_contacts > 0:

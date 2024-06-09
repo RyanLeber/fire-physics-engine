@@ -14,10 +14,10 @@ struct FeaturePair(CollectionElement):
     fn __init__(inout self):
         self.e = Int32(0)
 
-    fn __getitem__(self: Reference[Self, True, _]) -> ref [self.lifetime] Edges:
-        if not self[].e.isa[Edges]():
-            self[].e = Edges()
-        return self[].e[Edges]
+    fn __getitem__(ref [_] self) -> ref [__lifetime_of(self)] Edges:
+        if not self.e.isa[Edges]():
+            self.e = Edges()
+        return self.e[Edges]
 
     fn __getattr__[name: StringLiteral](self) -> Int32:
         if name == "value":
@@ -52,7 +52,7 @@ struct Edges(CollectionElement):
 
 
 @value
-struct Contact(CollectionElement):
+struct Contact(CollectionElementNew):
     var position: Vec2
     var normal: Vec2
     var r1: Vec2
@@ -79,6 +79,21 @@ struct Contact(CollectionElement):
         self.mass_tangent = 0.0
         self.bias = 0.0
         self.feature = FeaturePair()
+
+    fn __init__(inout self, *, copy:Self):
+        self.position = copy.position
+        self.normal = copy.normal
+        self.r1 = copy.r1
+        self.r2 = copy.r2
+        self.separation = copy.separation
+        self.Pn = copy.Pn
+        self.Pt = copy.Pt
+        self.Pnb = copy.Pnb
+        self.mass_normal = copy.mass_normal
+        self.mass_tangent = copy.mass_tangent
+        self.bias = copy.bias
+        self.feature = copy.feature
+
     
     fn __str__(self) -> String:
         return (
@@ -105,12 +120,12 @@ struct Arbiter[lifetime: MutableLifetime](CollectionElement):
     var num_contacts: Int32
     var friction: Float32
 
-    var b1: Reference[Body, True, lifetime]
-    var b2: Reference[Body, True, lifetime]
+    var b1: Reference[Body, lifetime]
+    var b2: Reference[Body, lifetime]
 
-    fn __init__(inout self, b1: Reference[Body, True, lifetime], b2: Reference[Body, True, lifetime]):
-        var b1_ptr = UnsafePointer.address_of(b1)
-        var b2_ptr = UnsafePointer.address_of(b2)
+    fn __init__(inout self, b1: Reference[Body, lifetime], b2: Reference[Body, lifetime]):
+        var b1_ptr = UnsafePointer[Body].address_of(b1[])
+        var b2_ptr = UnsafePointer[Body].address_of(b2[])
         if b1_ptr < b2_ptr:
             self.b1 = b1
             self.b2 = b2

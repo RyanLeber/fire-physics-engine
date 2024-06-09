@@ -41,7 +41,7 @@ fn main() raises:
 
     seed()
 
-    var demo_strings = InlineArray[StringLiteral, 10](
+    var demo_strings = InlineArray[String, 10](
         "Demo 0: Platform",
         "Demo 1: A Single Box",
         "Demo 2: Simple Pendulum",
@@ -62,7 +62,7 @@ fn main() raises:
 
     var bodies = InlineArray[Body, 200](Body())
     var joints = InlineArray[Joint[__lifetime_of(bodies)], 100](Joint[__lifetime_of(bodies)]())
-    var player = Optional[Reference[Body, True, __lifetime_of(bodies)]]()
+    var player = Optional[Reference[Body, __lifetime_of(bodies)]]()
 
     var num_bodies: Int = 0
     var num_joints: Int = 0
@@ -457,13 +457,13 @@ fn main() raises:
     fn set_player_body():
         if not player:
             player = Reference(bodies[num_bodies])
-            player.value()[][].set(Vec2(1.0, 1.0), 50.0)
-            player.value()[][].friction = 0.2
+            player.value()[].set(Vec2(1.0, 1.0), 50.0)
+            player.value()[].friction = 0.2
             world.add(player.value()[])
             num_bodies += 1
 
-        player.value()[][].position = Vec2(4, 15.0)
-        player.value()[][].velocity = player.value()[][].position * 0
+        player.value()[].position = Vec2(4, 15.0)
+        player.value()[].velocity = player.value()[].position * 0
 
 
     # MARK: init_demo
@@ -497,11 +497,11 @@ fn main() raises:
 
     # MARK: draw_body
     @parameter
-    fn draw_body(body: Reference[Body, _, _]):
+    fn draw_body(body: Body):
         # Calculate rotation matrix
-        var R: Mat22 = Mat22(body[].rotation)
-        var x: Vec2 = body[].position
-        var h: Vec2 = body[].width * 0.5
+        var R: Mat22 = Mat22(body.rotation)
+        var x: Vec2 = body.position
+        var h: Vec2 = body.width * 0.5
 
         # Calculate vertices
         var v1 = x + R * Vec2(-h.x, -h.y)
@@ -537,21 +537,21 @@ fn main() raises:
 
     # MARK: draw_joint
     @parameter
-    fn draw_joint(joint: Reference[Joint[__lifetime_of(bodies)], _, _]):
+    fn draw_joint(joint: Joint):
         # Extract body data
-        var b1 = joint[].body1
-        var b2 = joint[].body2
+        var b1 = joint.body1
+        var b2 = joint.body2
 
         # Calculate rotation matrices
-        var R1 = Mat22(b1.value()[][].rotation)
-        var R2 = Mat22(b2.value()[][].rotation)
+        var R1 = Mat22(b1.value()[].rotation)
+        var R2 = Mat22(b2.value()[].rotation)
 
         # Calculate positions
-        var x1 = b1.value()[][].position
-        var p1 = x1 + R1 * joint[].local_anchor1
+        var x1 = b1.value()[].position
+        var p1 = x1 + R1 * joint.local_anchor1
 
-        var x2 = b2.value()[][].position
-        var p2 = x2 + R2 * joint[].local_anchor2
+        var x2 = b2.value()[].position
+        var p2 = x2 + R2 * joint.local_anchor2
 
         raylib.rl_color_4ub(102, 229, 102, 255)
         raylib.rl_begin(DrawModes.RL_LINES)
@@ -585,7 +585,7 @@ fn main() raises:
             init_demo(key - Keyboard.KEY_ZERO)
 
         if player:
-            var plr = player.value()[]
+            var plr = player.value()
             if plr[].velocity.x < 20 and plr[].velocity.x > -20:
                 if raylib.is_key_down(Keyboard.KEY_A):
                     plr[].add_force(Vec2(200, 0))
@@ -604,11 +604,11 @@ fn main() raises:
         var font_size = 20
         var x = 20
 
-        raylib.draw_rectangle_lines( 10, 10, 420, 140, Reference(boarder))
-        raylib.draw_text(demo_strings[demo_index].unsafe_ptr(), x, 20, font_size, Reference(light_red))
-        raylib.draw_text("Keys: 1-9 Demos,".unsafe_ptr(), x, 50, font_size, Reference(light_red))
-        raylib.draw_text("Use A to move left, D to move right".unsafe_ptr(), x, 80, font_size, Reference(light_red))
-        raylib.draw_text("Press Space to jump".unsafe_ptr(), x, 110, font_size, Reference(light_red))
+        raylib.draw_rectangle_lines( 10, 10, 420, 140, UnsafePointer.address_of(boarder))
+        raylib.draw_text(demo_strings[demo_index].unsafe_cstr_ptr(), x, 20, font_size, UnsafePointer.address_of(light_red))
+        raylib.draw_text("Keys: 1-9 Demos,".unsafe_cstr_ptr(), x, 50, font_size, UnsafePointer.address_of(light_red))
+        raylib.draw_text("Use A to move left, D to move right".unsafe_cstr_ptr(), x, 80, font_size, UnsafePointer.address_of(light_red))
+        raylib.draw_text("Press Space to jump".unsafe_cstr_ptr(), x, 110, font_size, UnsafePointer.address_of(light_red))
 
 
     # MARK: main_loop
@@ -629,8 +629,8 @@ fn main() raises:
 
         while not raylib.window_should_close():
             raylib.begin_drawing()
-            raylib.clear_background(Reference(black))
-            raylib.begin_mode_2d(Reference(camera))
+            raylib.clear_background(UnsafePointer.address_of(black))
+            raylib.begin_mode_2d(UnsafePointer.address_of(camera))
             
             # Update the world
             world.step(time_step)
@@ -646,7 +646,7 @@ fn main() raises:
             for item in world.arbiters.items():
                 for i in range(item[].value.num_contacts):
                     var p = item[].value.contacts[i].position
-                    raylib.draw_circle_v(Reference(p), 0.08, Reference(red))
+                    raylib.draw_circle_v(UnsafePointer.address_of(p), 0.08, UnsafePointer.address_of(red))
 
             raylib.end_mode_2d()
             raylib.end_drawing()
