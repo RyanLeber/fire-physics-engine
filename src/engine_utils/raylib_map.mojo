@@ -561,7 +561,7 @@ alias c_raylib_DrawCubeWires = fn(position: UnsafePointer[Vector3], width: Float
 alias c_raylib_DrawCubeWiresV = fn(position: UnsafePointer[Vector3], size: UnsafePointer[Vector3], color: UnsafePointer[Color]) -> None
 
 # Module: text
-alias c_raylib_DrawText_ptr = fn(text: DTypePointer[DType.int8], pos_x: Int32, pos_y: Int32, font_size: Int32, color: UnsafePointer[Color]) -> None
+alias c_raylib_DrawText_ptr = fn(text: UnsafePointer[Int8], pos_x: Int32, pos_y: Int32, font_size: Int32, color: UnsafePointer[Color]) -> None
 
 # Module: rlglfw, low level rendering functions
 alias c_raylib_GetShapesTexture = fn() -> UnsafePointer[Texture2D]

@@ -1,5 +1,5 @@
 
-from utils import InlineArray
+from collections import InlineArray
 
 from .arbiter import FeaturePair, Contact
 from .body import Body
@@ -61,7 +61,7 @@ fn flip(inout fp: FeaturePair):
 
 fn clip_segment_to_line(
         inout v_out: InlineArray[ClipVertex, 2], 
-        inout v_in: InlineArray[ClipVertex, 2], 
+        inout v_in: InlineArray[ClipVertex, 2],
         normal: Vec2, 
         offset: Float32, 
         clip_edge: UInt8

@@ -1,8 +1,7 @@
 
 from random import random_float64, seed, random_si64
 
-from utils import InlineArray
-from collections import Optional, Set, Dict
+from collections import Optional, Set, Dict, InlineArray
 
 from src.engine import Body, Joint, World
 from src.engine.arbiter import ArbiterKey
@@ -163,7 +162,7 @@ fn main() raises:
         for i in range(5):
             bodies[b].set(Vec2(0.5, 0.5), 25.0)
             bodies[b].friction = friction[i]
-            bodies[b].position = Vec2(-7.5 + 2.0 * i, 16.0)
+            bodies[b].position = Vec2(-7.5 + 2.0 * Float32(i), 16.0)
             world.add(bodies[b])
             b += 1
 
@@ -185,8 +184,8 @@ fn main() raises:
         for i in range(10):
             bodies[b].set(Vec2(1.0, 1.0), 1.0)
             bodies[b].friction = 0.2
-            var x = random_float64(-0.1, 0.1)
-            bodies[b].position = Vec2(x, 0.51 + 1.05 * i)
+            var x = random_float64(-0.1, 0.1).cast[DType.float32]()
+            bodies[b].position = Vec2(x, 0.51 + 1.05 * Float32(i))
             world.add(bodies[b])
             b += 1
 
@@ -278,7 +277,7 @@ fn main() raises:
         for i in range(num_planks):
             bodies[b].set(Vec2(1.0, 0.25), mass)
             bodies[b].friction = 0.2
-            bodies[b].position = Vec2(-8.5 + 1.25 * i, 5.0)
+            bodies[b].position = Vec2(-8.5 + 1.25 * Float32(i), 5.0)
             world.add(bodies[b])
             b += 1
 
@@ -301,13 +300,13 @@ fn main() raises:
 
         var j: Int = 0
         for i in range(num_planks):
-            joints[j].set(bodies[i], bodies[i+1], Vec2(-9.125 + 1.25 * i, 5.0))
+            joints[j].set(bodies[i], bodies[i+1], Vec2(-9.125 + 1.25 * Float32(i), 5.0))
             joints[j].softness = softness
             joints[j].bias_factor = bias_factor
             world.add(joints[j])
             j += 1
 
-        joints[j].set(bodies[num_planks], bodies[0], Vec2(-9.125 + 1.25 * num_planks, 5.0))
+        joints[j].set(bodies[num_planks], bodies[0], Vec2(-9.125 + 1.25 * Float32(num_planks), 5.0))
         joints[j].softness = softness
         joints[j].bias_factor = bias_factor
         world.add(joints[j])
@@ -334,7 +333,7 @@ fn main() raises:
 
         for i in range(10):
             bodies[b].set(Vec2(0.2, 2.0), 10.0)
-            bodies[b].position = Vec2(-6.0 + 1.0 * i, 11.125)
+            bodies[b].position = Vec2(-6.0 + 1.0 * Float32(i), 11.125)
             bodies[b].friction = 0.1
             world.add(bodies[b])
             b += 1
@@ -409,11 +408,11 @@ fn main() raises:
         world.add(b1)
         b += 1
 
-        var mass = 10.0
+        var mass: Float32 = 10.0
 
         # Tuning
-        var frequencyHz = 4.0
-        var dampingRatio = 0.7
+        var frequencyHz: Float32 = 4.0
+        var dampingRatio: Float32 = 0.7
 
         # frequency in radians
         var omega = 2.0 * K_PI * frequencyHz
@@ -432,7 +431,7 @@ fn main() raises:
 
         var j = 0
         for i in range(15):
-            var x = Vec2(0.5 + i, y)
+            var x = Vec2(0.5 + Float32(i), y)
             bodies[b].set(Vec2(0.75, 0.25), mass)
             bodies[b].friction = 0.2
             bodies[b].position = x
@@ -489,10 +488,10 @@ fn main() raises:
             world.add(bomb.value()[])
             num_bodies += 1
 
-        bomb.value()[].position = Vec2(random_float64(-15.0, 15.0), 15.0)
-        bomb.value()[].rotation = random_float64(-1.5, 1.5)
+        bomb.value()[].position = Vec2(random_float64(-15.0, 15.0).cast[DType.float32](), 15.0)
+        bomb.value()[].rotation = random_float64(-1.5, 1.5).cast[DType.float32]()
         bomb.value()[].velocity = bomb.value()[].position * -1.5
-        bomb.value()[].angular_velocity = random_float64(-20.0, 20.0)
+        bomb.value()[].angular_velocity = random_float64(-20.0, 20.0).cast[DType.float32]()
 
     # MARK: draw_body
     @parameter
@@ -628,7 +627,7 @@ fn main() raises:
         raylib.set_target_fps(FPS)
 
         var camera: Camera2D = Camera2D()
-        camera.offset = Vec2( width * 0.5, height * .9 )
+        camera.offset = Vec2( Float32(width) * 0.5, Float32(height) * .9 )
         camera.target = Vec2( 0, 0 )
         camera.rotation = 180.0
         camera.zoom = 35.0

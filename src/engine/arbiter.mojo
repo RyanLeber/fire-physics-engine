@@ -1,6 +1,7 @@
 
 from math import sqrt
-from utils import Variant, InlineArray
+from utils import Variant
+from collections import InlineArray
 
 from src.engine_utils import Vec2, Mat22, mat_add, scalar_vec_mul, cross, dot
 from .body import Body
@@ -14,7 +15,7 @@ struct FeaturePair(CollectionElement):
     fn __init__(inout self):
         self.e = Int32(0)
 
-    fn __getitem__(ref [_] self) -> ref [__lifetime_of(self)] Edges:
+    fn __getitem__(inout self) -> ref [__lifetime_of(self)] Edges:
         if not self.e.isa[Edges]():
             self.e = Edges()
         return self.e[Edges]
@@ -181,7 +182,7 @@ struct Arbiter[lifetime: MutableLifetime](CollectionElement):
 
     fn pre_step(inout self, inv_dt: Float32, world_pos_cor: Bool, accumulate_impulses: Bool):
         var k_allowedPenetration: Float32 = 0.01
-        var k_biasFactor: Float32 = 0.2 if world_pos_cor else 0.0
+        var k_biasFactor: Float32 = Float32(0.2) if world_pos_cor else 0
 
         var b1 = Reference(self.b1[])
         var b2 = Reference(self.b2[])
@@ -208,7 +209,7 @@ struct Arbiter[lifetime: MutableLifetime](CollectionElement):
             kTangent += b1[].inv_i * (dot(r1, r1) - rt1 * rt1) + b2[].inv_i * (dot(r2, r2) - rt2 * rt2)
             c[].mass_tangent = 1.0 / kTangent
 
-            c[].bias = -k_biasFactor * inv_dt * min[DType.float32](0.0, c[].separation + k_allowedPenetration)
+            c[].bias = -k_biasFactor * inv_dt * min(0, c[].separation + k_allowedPenetration)
 
             if accumulate_impulses:
                 # Apply normal + friction impulse

@@ -1,6 +1,7 @@
 
 from os.env import getenv, setenv
 from random import random_si64
+from memory import bitcast
 
 @always_inline
 fn _DJBX33A_SECRET() -> UInt64:
@@ -30,11 +31,12 @@ struct DJBX33A_Hasher[custom_secret: UInt64 = 0]:
             self.secret = _DJBX33A_SECRET()
 
     @always_inline
-    fn _update_with_bytes(inout self, bytes: DTypePointer[DType.uint8], n: Int):
+    fn _update_with_bytes(inout self, bytes: UnsafePointer[UInt8], n: Int):
         """The algorithm is not optimal."""
         for i in range(n):
             # self.hash_data = self.hash_data * 33 + val_to_load.load(bytes, offset=i).cast[DType.uint64]()
-            self.hash_data = self.hash_data * 33 + Scalar[DType.uint8]().load(bytes, offset=i).cast[DType.uint64]()
+            # self.hash_data = self.hash_data * 33 + Scalar[DType.uint8]().load(bytes, offset=i).cast[DType.uint64]()
+            self.hash_data = self.hash_data * 33 + bytes[i].cast[DType.uint64]()
 
     @always_inline
     fn _update_with_simd[dt: DType, size: Int](inout self, value: SIMD[dt, size]):
@@ -70,7 +72,7 @@ struct ArbiterKey(KeyElement):
         self.hash_data = hasher^._finish()
 
     @always_inline
-    fn __hash__(self) -> Int:
+    fn __hash__(self) -> UInt:
         return int(self.hash_data)
 
     @always_inline

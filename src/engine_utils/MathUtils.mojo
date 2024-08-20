@@ -1,4 +1,4 @@
-from math import rsqrt, cos, sin
+from math import sqrt, cos, sin
 from testing import assert_not_equal
 from random import random_float64
 
@@ -9,6 +9,10 @@ struct Vec2(Absable):
     @always_inline
     fn __init__(inout self, x: Float32, y: Float32):
         self.data = SIMD[DType.float32, 2](x, y)
+
+    # @always_inline
+    # fn __init__(inout self, x: Float64, y: Float64):
+    #     self.data = SIMD[DType.float32, 2](x, y)
 
     @always_inline
     fn __init__(inout self, data: SIMD[DType.float32, 2]):
@@ -77,7 +81,7 @@ struct Vec2(Absable):
 
     @always_inline
     fn length(self) -> Float32:
-        return rsqrt(self.data[0]**2 + self.data[1]**2)
+        return sqrt(self.data[0]**2 + self.data[1]**2)
 
     @always_inline
     fn __neg__(self) -> Vec2:
@@ -92,7 +96,7 @@ struct Vec2(Absable):
 
     @always_inline
     fn normalize(self) -> Vec2:
-        return self.data * rsqrt(self @ self)
+        return self.data * sqrt(self @ self)
 
     @always_inline
     fn cross(self, other: Vec2) -> Vec2:
@@ -188,4 +192,4 @@ fn mat_mul(A: Mat22, B: Mat22) -> Mat22:
 
 @always_inline
 fn sign(x: Float32) -> Float32:
-    return -1.0 if x < 0.0 else 1.0
+    return -1 if x < 0 else 1
