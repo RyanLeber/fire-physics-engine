@@ -1,19 +1,7 @@
 
-from collections import Optional
-
-from .body import Body
-from .world import World
-from src.engine_utils import (
-    Vec2,
-    Mat22,
-    scalar_vec_mul,
-    mat_add,
-    cross
-    )
-
 
 @value
-struct Joint[lifetime: MutableLifetime](CollectionElementNew):
+struct Joint(CollectionElementNew):
     """An object to define a Physics Joint in 2D.
 
     Attributes:
@@ -40,8 +28,8 @@ struct Joint[lifetime: MutableLifetime](CollectionElementNew):
     var P: Vec2
     var bias_factor: Float32
     var softness: Float32
-    var body1: Optional[Reference[Body, lifetime]]
-    var body2: Optional[Reference[Body, lifetime]]
+    var body1: UnsafePointer[Body]
+    var body2: UnsafePointer[Body]
 
 
     fn __init__(inout self):
@@ -55,8 +43,8 @@ struct Joint[lifetime: MutableLifetime](CollectionElementNew):
         self.bias_factor = 0.0
         self.softness = 0.0
 
-        self.body1 = None
-        self.body2 = None
+        self.body1 = UnsafePointer[Body]()
+        self.body2 = UnsafePointer[Body]()
 
     fn __init__(inout self, *, copy: Self):
         self.M = copy.M
@@ -83,10 +71,10 @@ struct Joint[lifetime: MutableLifetime](CollectionElementNew):
         self.bias_factor = 0.0
         self.softness = 0.0
 
-        self.body1 = None
-        self.body2 = None
+        self.body1 = UnsafePointer[Body]()
+        self.body2 = UnsafePointer[Body]()
 
-    fn set(inout self, b1: Reference[Body, lifetime], b2: Reference[Body, lifetime], anchor: Vec2):
+    fn set(inout self, b1: UnsafePointer[Body], b2: UnsafePointer[Body], anchor: Vec2):
         self.body1 = b1
         self.body2 = b2
 
@@ -101,8 +89,8 @@ struct Joint[lifetime: MutableLifetime](CollectionElementNew):
         self.bias_factor = 0.2
 
     fn pre_step(inout self, inv_dt: Float32, world_warm_start: Bool, world_pos_cor: Bool):
-        var body1 = self.body1.value()
-        var body2 = self.body2.value()
+        var body1 = self.body1
+        var body2 = self.body2
 
         self.r1 = Mat22(body1[].rotation) * self.local_anchor1
         self.r2 = Mat22(body2[].rotation) * self.local_anchor2
@@ -157,8 +145,8 @@ struct Joint[lifetime: MutableLifetime](CollectionElementNew):
             self.P = Vec2(0.0, 0.0)
 
     fn apply_impulse(inout self):
-        var body1 = self.body1.value()
-        var body2 = self.body2.value()
+        var body1 = self.body1
+        var body2 = self.body2
         var dv = body2[].velocity + cross(body2[].angular_velocity, self.r2) - body1[].velocity - cross(body1[].angular_velocity, self.r1)
 
         var impulse = self.M * (self.bias - dv - self.P * self.softness)
@@ -171,17 +159,45 @@ struct Joint[lifetime: MutableLifetime](CollectionElementNew):
 
         self.P += impulse
 
-    fn __str__(self) -> String:
-        return (
-            "\n  M:          " + str(self.M) +
-            "\n  anchor1:    " + str(self.local_anchor1) +
-            "\n  anchor2:    " + str(self.local_anchor2) +
-            "\n  r1:         " + str(self.r1) +
-            "\n  r2:         " + str(self.r2) +
-            "\n  bias:       " + str(self.bias) +
-            "\n  P:          " + str(self.P) +
-            "\n  bias_factor: " + str(self.bias_factor) +
-            "\n  softness:   " + str(self.softness) +
-            "\n  body1: " + str(UnsafePointer.address_of(self.body1.value()[]))+ "\n" + str(self.body1.value()[]) +
-            "\n  body2: " + str(UnsafePointer.address_of(self.body2.value()[]))+ "\n" + str(self.body2.value()[]) 
-        )
+
+    fn draw(self, camera: Camera, renderer: Renderer, color: Color) raises:
+        # Extract body data
+        var b1 = self.body1
+        var b2 = self.body2
+
+        # Calculate rotation matrices
+        var R1 = Mat22(b1[].rotation)
+        var R2 = Mat22(b2[].rotation)
+
+        # Calculate positions
+        var x1 = b1[].position
+        var p1 = x1 + R1 * self.local_anchor1
+
+        var x2 = b2[].position
+        var p2 = x2 + R2 * self.local_anchor2
+
+        renderer.set_color(color)
+
+        renderer.draw_line(x1.x, x1.y, p1.x, p1.y)
+        renderer.draw_line(x2.x, x2.y, p2.x, p2.y)
+
+    fn draw(self, camera: Camera, renderer: Renderer, color: Color, screen_dimensions: Vec2) raises:
+        # Extract body data
+        var b1 = self.body1
+        var b2 = self.body2
+
+        # Calculate rotation matrices
+        var R1 = Mat22(b1[].rotation)
+        var R2 = Mat22(b2[].rotation)
+
+        # Calculate positions
+        var x1 = b1[].position.world_to_screen(screen_dimensions)
+        var p1 = x1 + R1 * self.local_anchor1
+
+        var x2 = b2[].position.world_to_screen(screen_dimensions)
+        var p2 = x2 + R2 * self.local_anchor2
+
+        renderer.set_color(color)
+
+        renderer.draw_line(x1.x, x1.y, p1.x, p1.y)
+        renderer.draw_line(x2.x, x2.y, p2.x, p2.y)

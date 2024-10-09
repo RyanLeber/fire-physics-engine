@@ -1,16 +1,4 @@
 
-from collections import InlineArray
-
-from .arbiter import FeaturePair, Contact
-from .body import Body
-from src.engine_utils import (
-        Vec2,
-        Mat22,
-        dot,
-        mat_mul,
-        sign
-    )
-
 
 # Box vertex and edge numbering:
 #        ^ y
@@ -55,8 +43,15 @@ struct ClipVertex(CollectionElementNew):
 
 
 fn flip(inout fp: FeaturePair):
-    swap(fp[].in_edge1, fp[].in_edge2)
-    swap(fp[].out_edge1, fp[].out_edge2)
+    # swap(fp[].in_edge1, fp[].in_edge2)
+    # swap(fp[].out_edge1, fp[].out_edge2)
+    var in_edge1 = fp[].in_edge1
+    fp[].in_edge1 = fp[].in_edge2
+    fp[].in_edge2 = in_edge1
+    var out_edge1 = fp[].out_edge1
+    fp[].out_edge1 = fp[].out_edge2
+    fp[].out_edge2 = out_edge1
+
 
 
 fn clip_segment_to_line(
@@ -145,8 +140,8 @@ fn compute_incident_edge(inout c: InlineArray[ClipVertex, 2],h: Vec2, pos: Vec2,
 
 fn collide(
         inout contacts: InlineArray[Contact, 2],
-        body_a: Reference[Body],
-        body_b: Reference[Body]
+        body_a: UnsafePointer[Body],
+        body_b: UnsafePointer[Body]
     ) -> Int:
 
     # Setup

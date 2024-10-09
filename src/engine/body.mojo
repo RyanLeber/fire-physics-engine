@@ -1,8 +1,5 @@
 
 from math import isinf
-from memory import memcmp
-
-from src.engine_utils import Vec2
 
 alias INF = Float32.MAX
 
@@ -80,23 +77,7 @@ struct Body(CollectionElementNew):
         self.inv_mass = 0.0
         self.I = INF
         self.inv_i = 0.0
-
-    fn __str__(self) -> String:
-        return (
-            "    position:        " + str(self.position) +
-            "\n    velocity:        " + str(self.velocity) +
-            "\n    rotation:        " + str(self.rotation) +
-            "\n    angular_velocity: " + str(self.angular_velocity) +
-            "\n    force:           " + str(self.force) +
-            "\n    torque:          " + str(self.torque) +
-            "\n    friction:        " + str(self.friction) +
-            "\n    width:           " + str(self.width) +
-            "\n    mass:            " + str(self.mass) +
-            "\n    inv_mass:         " + str(self.inv_mass) +
-            "\n    I:               " + str(self.I) +
-            "\n    inv_i:            " + str(self.inv_i)
-        )
-
+        
 
     @always_inline
     fn add_force(inout self, force: Vec2):
@@ -118,3 +99,47 @@ struct Body(CollectionElementNew):
             self.inv_mass = 0.0
             self.I = INF
             self.inv_i = 0.0
+
+    fn draw(self, camera: Camera, renderer: Renderer, color: Color) raises:
+        # Calculate rotation matrix
+        var R: Mat22 = Mat22(self.rotation)
+        var x: Vec2 = self.position
+        var h: Vec2 = self.width * 0.5
+
+        # Calculate vertices
+        var v1 = x + R * Vec2(-h.x, -h.y)
+        var v2 = x + R * Vec2( h.x, -h.y)
+        var v3 = x + R * Vec2( h.x,  h.y)
+        var v4 = x + R * Vec2(-h.x,  h.y)
+
+        renderer.set_color(color)
+
+        renderer.draw_line(v2.x, v2.y, v1.x, v1.y)
+        renderer.draw_line(v1.x, v1.y, v4.x, v4.y)
+        renderer.draw_line(v2.x, v2.y, v3.x, v3.y)
+        renderer.draw_line(v3.x, v3.y, v4.x, v4.y)
+
+    fn draw(self, camera: Camera, renderer: Renderer, color: Color, screen_dimensions: Vec2) raises:
+        # Calculate rotation matrix
+        var R: Mat22 = Mat22(self.rotation)
+        # var x: Vec2 = self.position.world_to_screen(screen_dimensions)
+        var x: Vec2 = self.position
+        var h: Vec2 = self.width * 0.5
+
+        # Calculate vertices
+        var v1 = (x + R * Vec2(-h.x, -h.y)).world_to_screen(screen_dimensions)
+        var v2 = (x + R * Vec2( h.x, -h.y)).world_to_screen(screen_dimensions)
+        var v3 = (x + R * Vec2( h.x,  h.y)).world_to_screen(screen_dimensions)
+        var v4 = (x + R * Vec2(-h.x,  h.y)).world_to_screen(screen_dimensions)
+
+        # var v1 = x + R * Vec2(-h.x, -h.y)
+        # var v2 = x + R * Vec2( h.x, -h.y)
+        # var v3 = x + R * Vec2( h.x,  h.y)
+        # var v4 = x + R * Vec2(-h.x,  h.y)
+
+        renderer.set_color(color)
+
+        renderer.draw_line(v2.x, v2.y, v1.x, v1.y)
+        renderer.draw_line(v1.x, v1.y, v4.x, v4.y)
+        renderer.draw_line(v2.x, v2.y, v3.x, v3.y)
+        renderer.draw_line(v3.x, v3.y, v4.x, v4.y)

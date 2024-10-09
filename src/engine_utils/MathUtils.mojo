@@ -1,6 +1,25 @@
 from math import sqrt, cos, sin
-from testing import assert_not_equal
 from random import random_float64
+
+@value
+struct AABB:
+    var min: Vec2
+    var max: Vec2
+
+    fn to_rect(self, screen_dimensions: Vec2) -> DRect[DType.float32]:
+        var p1 = self.min
+        var p2 = self.max
+        var size = p2 - p1
+        var pos = p1.world_to_screen(screen_dimensions)
+        return DRect[DType.float32](pos.x, pos.y, size.x, size.y)
+
+    fn to_rect(self) -> DRect[DType.float32]:
+        var p1 = self.min
+        var p2 = self.max
+        var size = p2 - p1
+        var pos = p1
+        return DRect[DType.float32](pos.x, pos.y, size.x, size.y)
+
 
 @register_passable
 struct Vec2(Absable):
@@ -105,6 +124,81 @@ struct Vec2(Absable):
         return (self_zxy * other.data - self.data * other_zxy).shuffle[
             2, 0, 1, 3
         ]()
+
+    fn world_to_screen(self, screen_dimensions: Vec2) -> Vec2:
+        var half_screen_width = screen_dimensions.x / 2
+        var half_screen_height = screen_dimensions.y / 2
+        var res = self
+        res[1] = -res[1]
+
+        res[0] += half_screen_width
+        res[1] += half_screen_height
+        return res
+
+    fn screen_to_world(self, screen_dimensions: Vec2) -> Vec2:
+        var half_screen_width = screen_dimensions.x / 2
+        var half_screen_height = screen_dimensions.y / 2
+        var res = self
+
+        res[0] -= half_screen_width
+        res[1] -= half_screen_height
+        res[1] = -res[1]
+        return res
+
+    fn rotate(self, radians: Float32) -> Vec2:
+        var s = sin(radians)
+        var c = cos(radians)
+        return Vec2(c * self.x - s * self.y, s * self.x + c * self.y)
+
+
+@register_passable
+struct Vec3:
+    var data: SIMD[DType.float32, 4]
+
+    @always_inline
+    fn __init__(inout self, x: Float32, y: Float32, z: Float32):
+        self.data = SIMD[DType.float32, 4](x, y, z, 0)
+
+    @always_inline
+    fn __init__(inout self, data: SIMD[DType.float32, 4]):
+        self.data = data
+
+    @always_inline
+    fn __copyinit__(inout self, other: Self):
+        self.data = other.data
+
+    @always_inline
+    fn __getitem__(self, idx: Int) -> Float32:
+        return self.data[idx]
+
+    @always_inline
+    fn __setitem__(inout self, idx: Int, value: Float32):
+        self.data[idx] = value
+
+    @always_inline
+    fn __setattr__[name: StringLiteral](inout self, val: Float32):
+        @parameter
+        if name == "x":
+            self.data[0] = val
+        elif name == "y":
+            self.data[1] = val
+        elif name == "z":
+            self.data[2] = val
+        else:
+            constrained[name == "x" or name == "y" or name == "z", "can only access with x or y members"]()
+
+    @always_inline
+    fn __getattr__[name: StringLiteral](borrowed self) -> Float32:
+        @parameter
+        if name == "x":
+            return self.data[0]
+        elif name == "y":
+            return self.data[1]
+        elif name == "z":
+            return self.data[2]
+        else:
+            constrained[name == "x" or name == "y" or name == "z", "can only access with x or y members"]()
+            return 0
 
 
 @value

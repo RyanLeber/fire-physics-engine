@@ -1,42 +1,34 @@
 
-from collections import Dict, Set
-
-from src.engine_utils import Vec2
-from .arbiterkey import ArbiterKey
-from .arbiter import Arbiter
-from .body import Body
-from .joint import Joint
-
 
 @value
-struct World[gravity: Vec2, iterations: Int, bodies_lifetime: MutableLifetime, joints_lifetime: MutableLifetime]:
+struct World[gravity: Vec2, iterations: Int]:
     var accumulate_impulses: Bool
     var warm_starting: Bool
     var position_correction: Bool
-    var bodies: List[Reference[Body, bodies_lifetime]]
-    var joints: List[Reference[Joint[bodies_lifetime], joints_lifetime]]
-    var arbiters: Dict[ArbiterKey, Arbiter[bodies_lifetime]]
+    var bodies: List[UnsafePointer[Body]]
+    var joints: List[UnsafePointer[Joint]]
+    var arbiters: Dict[ArbiterKey, Arbiter]
 
     fn __init__(inout self):
         self.accumulate_impulses = True
         self.warm_starting = True
         self.position_correction = True
 
-        self.bodies = List[Reference[Body, bodies_lifetime]]()
-        self.joints = List[Reference[Joint[bodies_lifetime], joints_lifetime]]()
+        self.bodies = List[UnsafePointer[Body]]()
+        self.joints = List[UnsafePointer[Joint]]()
 
-        self.arbiters = Dict[ArbiterKey, Arbiter[bodies_lifetime]]()
+        self.arbiters = Dict[ArbiterKey, Arbiter]()
 
-    fn add(inout self, body_ref: Reference[Body, bodies_lifetime]):
+    fn add(inout self, body_ref: UnsafePointer[Body]):
         self.bodies.append(body_ref)
 
-    fn add(inout self, joint_ref: Reference[Joint[bodies_lifetime], joints_lifetime]):
+    fn add(inout self, joint_ref: UnsafePointer[Joint]):
         self.joints.append(joint_ref)
 
     fn clear(inout self):
         self.bodies.clear()
         self.joints.clear()
-        self.arbiters = Dict[ArbiterKey, Arbiter[bodies_lifetime]]()
+        self.arbiters = Dict[ArbiterKey, Arbiter]()
 
     fn broad_phase(inout self) raises:
         # O(n^2) broad-phase
@@ -50,8 +42,8 @@ struct World[gravity: Vec2, iterations: Int, bodies_lifetime: MutableLifetime, j
 
                 if bi[].inv_mass == 0.0 and bj[].inv_mass == 0.0:
                     continue
-                var key = ArbiterKey(int(UnsafePointer[Body].address_of(bi[])), int(UnsafePointer[Body].address_of(bj[])))
-                var new_arb: Arbiter[bodies_lifetime] = Arbiter(bi, bj)
+                var key = ArbiterKey(int(bi), int(bj))
+                var new_arb: Arbiter = Arbiter(bi, bj)
 
                 if new_arb.num_contacts > 0:
                     if key in self.arbiters:

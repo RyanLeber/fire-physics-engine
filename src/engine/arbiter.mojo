@@ -1,12 +1,6 @@
 
 from math import sqrt
 from utils import Variant
-from collections import InlineArray
-
-from src.engine_utils import Vec2, Mat22, mat_add, scalar_vec_mul, cross, dot
-from .body import Body
-from .collide import collide
-from .arbiterkey import ArbiterKey
 
 @value
 struct FeaturePair(CollectionElement):
@@ -114,19 +108,19 @@ struct Contact(CollectionElementNew):
 
 
 @value
-struct Arbiter[lifetime: MutableLifetime](CollectionElement):
+struct Arbiter(CollectionElement):
     alias MAX_POINTS = 2
     alias array_type = InlineArray[Contact, Self.MAX_POINTS]
     var contacts: Self.array_type
     var num_contacts: Int32
     var friction: Float32
 
-    var b1: Reference[Body, lifetime]
-    var b2: Reference[Body, lifetime]
+    var b1: UnsafePointer[Body]
+    var b2: UnsafePointer[Body]
 
-    fn __init__(inout self, b1: Reference[Body, lifetime], b2: Reference[Body, lifetime]):
-        var b1_ptr = UnsafePointer[Body].address_of(b1[])
-        var b2_ptr = UnsafePointer[Body].address_of(b2[])
+    fn __init__(inout self, b1: UnsafePointer[Body], b2: UnsafePointer[Body]):
+        var b1_ptr = b1
+        var b2_ptr = b2
         if b1_ptr < b2_ptr:
             self.b1 = b1
             self.b2 = b2
@@ -282,13 +276,3 @@ struct Arbiter[lifetime: MutableLifetime](CollectionElement):
             b2[].velocity += Pt * b2[].inv_mass
             b2[].angular_velocity += b2[].inv_i * cross(c[].r2, Pt)
 
-
-    fn __str__(self) -> String:
-        return (
-            "\n friction:    " + str(self.friction) +
-            "\n numContacts: " + str(self.num_contacts) +
-            "\n contact1:\n" + str(self.contacts[0]) +
-            "\n contact2:\n" + str(self.contacts[1]) +
-            "\n  body1: " + str(UnsafePointer.address_of(self.b1[]))+ "\n" + str(self.b1[]) +
-            "\n  body2: " + str(UnsafePointer.address_of(self.b2[]))+ "\n" + str(self.b2[]) 
-        )
