@@ -1,17 +1,12 @@
 
-from random import random_float64, seed, random_si64
 from math import sin, cos
 
 import sdl
 import infrared 
-
 from src import *
 
 
 # MARK: Constants
-# alias SCREENWIDTH: Int = 1280
-# alias SCREENHEIGHT: Int = 720
-# alias FPS = 170
 alias iterations: Int = 10
 alias GRAVITY = Vec2(0.0, -100.0)
 
@@ -90,11 +85,9 @@ struct Scene[gravity: Vec2, iterations: Int, screen_width: Int, screen_height: I
         self.world.add(UnsafePointer[Body].address_of(self.bodies[self.num_bodies]))
         self.num_bodies += 1
 
-
     fn update(inout self, time_step: Float32, renderer: Renderer) raises:
         self.world.step(time_step)
         self.draw(renderer)
-
 
     fn init_demo(inout self):
         self.world.clear()
@@ -111,7 +104,6 @@ struct Scene[gravity: Vec2, iterations: Int, screen_width: Int, screen_height: I
         self.demo_1()
 
 
-
 def main():
     var mojo_sdl = sdl.SDL(video=True, timer=True, events=True)
     var window = sdl.Window(mojo_sdl, "Thermo", screen_width, screen_height)
@@ -121,24 +113,9 @@ def main():
     var clock = sdl.Clock(mojo_sdl, 1000)
     var running = True
 
-    # sdl._sdl.render_set_scale(renderer._renderer_ptr, scale, scale)
-
     var scene = Scene[GRAVITY, iterations, scene_width, scene_height](renderer)
     scene.init_demo()
     var time_step: Float32 = 1.0 / 60.0
-    # var rect = AABB(Vec2(-50, 200), Vec2(50, 100)).to_rect(Vec2(screen_width, screen_height))
-    # var test_color = Color(255, 0, 0)
-
-    # var x1 = Vec2(-500, 0).world_to_screen(Vec2(screen_width, screen_height))
-    # var x2 = Vec2(500, 0).world_to_screen(Vec2(screen_width, screen_height))
-
-    # var y1 = Vec2(0, 500).world_to_screen(Vec2(screen_width, screen_height))
-    # var y2 = Vec2(0, -500).world_to_screen(Vec2(screen_width, screen_height))
-
-    # var test_color2 = Color(0, 255, 0)
-    # var rot = sin(K_PI/4) * -500
-    # var p1 = Vec2(-500, rot).world_to_screen(Vec2(screen_width, screen_height))
-    # var p2 = Vec2(500, rot).world_to_screen(Vec2(screen_width, screen_height))
 
     var spawn = False
     
@@ -158,19 +135,7 @@ def main():
                     
         clock.tick()
 
-        # var screen_cursor = mouse.get_position()
-        # if spawn:
-        #     scene.add_body(mouse.get_position())
-
         scene.update(time_step, renderer)
 
-        # renderer.draw_rect(rect)
-
-        # renderer.set_color(test_color)
-        # renderer.draw_line(x1.x, x1.y, x2.x, x2.y)
-        # renderer.draw_line(y1.x, y1.y, y2.x, y2.y)
-
-        # renderer.set_color(test_color2)
-        # renderer.draw_line(p1.x, p1.y, p2.x, p2.y)
-
         renderer.present()
+        
