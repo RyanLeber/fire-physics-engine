@@ -1,3 +1,10 @@
 /raylib_bindings/build
 /raylib_bindings/lib
+sdl.mojopkg
+infrared.mojopkg
 /tests
+# pixi environments
+.pixi
+*.egg-info
+# magic environments
+.magic
