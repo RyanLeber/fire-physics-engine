@@ -2,7 +2,7 @@
 /raylib_bindings/lib
 sdl.mojopkg
 infrared.mojopkg
-/tests
+/tmp
 # pixi environments
 .pixi
 *.egg-info
