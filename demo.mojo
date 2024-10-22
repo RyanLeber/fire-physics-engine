@@ -106,7 +106,7 @@ struct Scene[gravity: Vec2, iterations: Int, screen_width: Int, screen_height: I
 
 def main():
     var mojo_sdl = sdl.SDL(video=True, timer=True, events=True)
-    var window = sdl.Window(mojo_sdl, "Thermo", screen_width, screen_height)
+    var window = sdl.Window(mojo_sdl, "Fire Physics Engine", screen_width, screen_height)
     var keyboard = sdl.Keyboard(mojo_sdl)
     var mouse = sdl.Mouse(mojo_sdl)
     var renderer = sdl.Renderer(window^, flags = sdl.RendererFlags.SDL_RENDERER_ACCELERATED)
